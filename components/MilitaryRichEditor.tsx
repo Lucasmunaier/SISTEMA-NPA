@@ -1,5 +1,6 @@
 import React, { useRef, useState, useMemo } from 'react';
 import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 interface MilitaryRichEditorProps {
     value: string;
@@ -28,7 +29,8 @@ const MilitaryRichEditor: React.FC<MilitaryRichEditorProps> = ({ value, onChange
         clipboard: { matchVisual: false }
     }), [toolbarId]);
 
-    const formats = ['bold', 'italic', 'underline', 'align', 'image', 'clean'];
+    // "clean" is a toolbar action, not a format to be registered in the formats array
+    const formats = ['bold', 'italic', 'underline', 'align', 'image'];
 
     return (
         <div className="military-editor-container border border-gray-600 rounded-md overflow-hidden bg-[#f0f0f0] text-black shadow-inner">
