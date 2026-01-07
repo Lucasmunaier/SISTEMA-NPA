@@ -20,26 +20,27 @@ function getDocumentHtml(data: NpaData): string {
 
     const generateSummary = () => {
         let summaryHtml = '<div style="width: 100%;">';
+        // Placeholder page numbers, as calculating them from HTML is not feasible here.
+        let pageCounter = 2; 
 
-        const createSummaryRow = (text: string, isSub: boolean) => {
-            const style = isSub ? 'padding-left: 2.5cm;' : 'font-weight: bold;';
+        const createSummaryRow = (text: string, pageNum: string, isSub: boolean) => {
+            const style = isSub ? 'padding-left: 1.5cm;' : 'font-weight: bold;';
             return `
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; line-height: 1.5; ${style}">
-                    <span style="white-space: nowrap; padding-right: 8px;">${text}</span>
-                    <span style="width: 100%; border-bottom: 1px dotted black; margin-bottom: 0.3em; flex-grow: 1;"></span>
-                    <span style="white-space: nowrap; padding-left: 8px;">...</span>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; line-height: 1.3; font-size: 11pt; margin: 0; padding: 0;">
+                    <span style="white-space: nowrap; padding-right: 4px;">${text.toUpperCase()}</span>
+                    <span style="width: 100%; border-bottom: 1px dotted black; margin-bottom: 4px;"></span>
+                    <span style="white-space: nowrap; padding-left: 4px;">${pageNum}</span>
                 </div>
             `;
         };
 
         data.body.forEach(section => {
-            summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, false);
+            summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, false);
             section.subsections.forEach(subsection => {
-                 summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, true);
+                 summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, true);
             });
         });
-        summaryHtml += createSummaryRow('REFERÊNCIAS', false);
-        summaryHtml += '</div>';
+        summaryHtml += createSummaryRow('REFERÊNCIAS', `${pageCounter + 1}`, false);
         return summaryHtml;
     };
 
@@ -59,9 +60,17 @@ function getDocumentHtml(data: NpaData): string {
                             <strong style="font-size: 14pt;">NORMA PADRÃO DE AÇÃO</strong>
                         </td>
                         <td style="width: 25%; text-align: center; padding: 0; border-left: 2px solid black; vertical-align: top;">
-                            <div style="border-bottom: 1px solid black; padding: 5px;"><strong>Nº DO DOCUMENTO</strong><br/>${data.numero}</div>
-                            <div style="border-bottom: 1px solid black; padding: 5px;"><strong>EXPEDIÇÃO</strong><br/>${formatDate(data.dataExpedicao)}</div>
-                            <div style="padding: 5px;"><strong>VALIDADE</strong><br/>${data.validade}</div>
+                           <table style="width: 100%; height: 100%; border-collapse: collapse;">
+                                <tr style="border-bottom: 1px solid black;">
+                                    <td style="padding: 5px; text-align: center;"><strong>Nº DO DOCUMENTO</strong><br/>${data.numero}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid black;">
+                                    <td style="padding: 5px; text-align: center;"><strong>EXPEDIÇÃO</strong><br/>${formatDate(data.dataExpedicao)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px; text-align: center;"><strong>VALIDADE</strong><br/>${data.validade}</td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                      <tr>
@@ -80,7 +89,7 @@ function getDocumentHtml(data: NpaData): string {
                     </tr>
                 </table>
                 <div style="margin-top: 5cm;">
-                    <h2 style="text-align: center; font-size: 16pt;">SUMÁRIO</h2>
+                    <h2 style="text-align: center; font-size: 16pt; text-transform: uppercase;">Sumário</h2>
                     ${generateSummary()}
                 </div>
             </div>
@@ -92,7 +101,7 @@ function getDocumentHtml(data: NpaData): string {
                         <p style="text-transform: uppercase;"><strong>${section.numero} ${section.titulo}</strong></p>
                         ${section.subsections.map(subsection => `
                             <div style="margin-top: 1em;">
-                                <p style="text-transform: uppercase;"><strong><u>${subsection.numero} ${subsection.titulo}</u></strong></p>
+                                <p style="text-transform: uppercase;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
                                 ${subsection.titulo.includes('PROPOSIÇÃO') ? 
                                     `<div style="margin-top: 3cm;">
                                         <table style="width: 100%; border-collapse: collapse;">
@@ -142,28 +151,40 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
                 <p style="text-align: center; font-weight: bold;">Anexo A - Tabela de Efetivo Proposto</p>
                 <br/>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid black;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 10pt; border: 1px solid black;">
                     <thead>
-                        <tr style="background-color: #e0e0e0;">
-                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Função</th>
-                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Previsão Principal (Posto/Grad, Quadro, Espec.)</th>
-                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Previsão Alternativa (Posto/Grad, Quadro, Espec.)</th>
-                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Efetivo Proposto</th>
+                        <tr style="background-color: #e0e0e0; font-weight: bold;">
+                            <th style="border: 1px solid black; padding: 4px; text-align: center; vertical-align: middle;" rowspan="2">Função</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;" colspan="3">Previsão Principal</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;" colspan="3">Previsão Alternativa</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center; vertical-align: middle;" rowspan="2">Efetivo Proposto</th>
+                        </tr>
+                        <tr style="background-color: #e0e0e0; font-weight: bold;">
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Posto/Grad</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Quadro</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Espec.</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Posto/Grad</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Quadro</th>
+                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Espec.</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${data.anexoA.map(row => `
                             <tr>
-                                <td style="border: 1px solid black; padding: 5px;">${row.funcao}</td>
-                                <td style="border: 1px solid black; padding: 5px;">${row.previsaoPrincipal}</td>
-                                <td style="border: 1px solid black; padding: 5px;">${row.previsaoAlternativa}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.efetivoProposto}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.funcao}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoPrincipal.postoGrad}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoPrincipal.quadro}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoPrincipal.especialidade}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoAlternativa.postoGrad}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoAlternativa.quadro}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoAlternativa.especialidade}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.efetivoProposto}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="3" style="border: 1px solid black; padding: 5px; text-align: right; font-weight: bold;">TOTAL</td>
+                            <td colspan="7" style="border: 1px solid black; padding: 5px; text-align: right; font-weight: bold;">TOTAL</td>
                             <td style="border: 1px solid black; padding: 5px; text-align: center; font-weight: bold;">${totalEfetivoA}</td>
                         </tr>
                     </tfoot>
@@ -201,7 +222,7 @@ function getDocumentHtml(data: NpaData): string {
                     </tbody>
                 </table>
                 <br/>
-                <p style="font-size: 10pt;"><strong>LEGENDA:</strong> COLUNAS DOS CARGOS: 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
+                <p style="font-size: 10pt; border-top: 1px solid black; padding-top: 8px; margin-top: 8px;"><strong>LEGENDA:</strong> COLUNAS DOS CARGOS: 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
             </div>
 
             <!-- Anexo C -->
@@ -327,7 +348,7 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
         for (let i = 2; i <= totalPages; i++) {
             doc.setPage(i);
             doc.setFontSize(12);
-            doc.setFont('Times-Roman', 'normal');
+            doc.setFont('times', 'normal');
             
             const pageNumText = `${i}`;
             const pageNumWidth = doc.getTextWidth(pageNumText);

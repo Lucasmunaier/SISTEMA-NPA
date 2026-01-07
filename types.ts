@@ -46,11 +46,17 @@ export interface Assinatura {
     cargo: string;
 }
 
+export interface Previsao {
+    postoGrad: string;
+    quadro: string;
+    especialidade: string;
+}
+
 export interface AnexoAItem {
     id: number;
     funcao: string;
-    previsaoPrincipal: string;
-    previsaoAlternativa: string;
+    previsaoPrincipal: Previsao;
+    previsaoAlternativa: Previsao;
     efetivoProposto: number;
 }
 

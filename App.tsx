@@ -12,7 +12,7 @@ const initialNpaData: NpaData = {
     dataExpedicao: new Date().toISOString().split('T')[0],
     validade: '2 ANOS',
     assunto: 'Seção XXX (XXXX)',
-    distribuicao: 'Todos os setores do PAMA LS',
+    distribuicao: 'B',
     anexos: [
         { id: 1, letra: 'A', titulo: 'Tabela Efetivo Proposto', tipo: 'efetivo', editavel: false },
         { id: 2, letra: 'B', titulo: 'Matriz de Qualificação', tipo: 'qualificacao', editavel: false },
@@ -50,9 +50,9 @@ const initialNpaData: NpaData = {
         aprovadoPor: { nome: 'CLAUDOMIRO FELTRAN JUNIOR Cel Av', cargo: 'Diretor do PAMALS' },
     },
     anexoA: [
-        { id: 1, funcao: 'SETOR-CH (Chefe)', previsaoPrincipal: '', previsaoAlternativa: '', efetivoProposto: 1 },
-        { id: 2, funcao: 'SETOR-ENC (Encarregado)', previsaoPrincipal: '', previsaoAlternativa: '', efetivoProposto: 1 },
-        { id: 3, funcao: 'SETOR-AUX (Auxiliar)', previsaoPrincipal: '', previsaoAlternativa: '', efetivoProposto: 1 },
+        { id: 1, funcao: 'SETOR-CH (Chefe)', previsaoPrincipal: { postoGrad: '', quadro: '', especialidade: '' }, previsaoAlternativa: { postoGrad: '', quadro: '', especialidade: '' }, efetivoProposto: 1 },
+        { id: 2, funcao: 'SETOR-ENC (Encarregado)', previsaoPrincipal: { postoGrad: '', quadro: '', especialidade: '' }, previsaoAlternativa: { postoGrad: '', quadro: '', especialidade: '' }, efetivoProposto: 1 },
+        { id: 3, funcao: 'SETOR-AUX (Auxiliar)', previsaoPrincipal: { postoGrad: '', quadro: '', especialidade: '' }, previsaoAlternativa: { postoGrad: '', quadro: '', especialidade: '' }, efetivoProposto: 1 },
     ],
     anexoB: [],
 };
