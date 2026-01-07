@@ -42,8 +42,36 @@ const TabIdentificacao: React.FC<TabIdentificacaoProps> = ({ data, onDataChange 
         handleAnexosChange(remainingAnexos);
     };
 
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                onDataChange('logo', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     return (
         <div className="space-y-6">
+            <div className="p-4 bg-gray-700/50 border border-gray-600 rounded-lg">
+                <label className="block text-sm font-medium text-cyan-400 mb-2">Logo do Parque (Customizada)</label>
+                <div className="flex items-center space-x-4">
+                    {data.logo && (
+                        <div className="w-16 h-16 bg-white p-1 rounded border border-gray-400 flex items-center justify-center overflow-hidden">
+                            <img src={data.logo} alt="Custom Logo" className="max-w-full max-h-full object-contain" />
+                        </div>
+                    )}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-700 cursor-pointer"
+                    />
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label htmlFor="npaNumero" className="block text-sm font-medium text-gray-300 mb-1">

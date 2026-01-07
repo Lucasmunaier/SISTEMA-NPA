@@ -72,6 +72,7 @@ export interface AnexoBItem {
 }
 
 export interface NpaData {
+    logo?: string;
     numero: string;
     dataExpedicao: string;
     validade: string;

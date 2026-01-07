@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { NpaData, Tab, Section, SubSection } from './types';
+import { NpaData, Tab, Section, SubSection, SubSubSection } from './types';
 import Tabs from './components/Tabs';
 import TabIdentificacao from './components/TabIdentificacao';
 import TabCorpoTexto from './components/TabCorpoTexto';
@@ -22,10 +22,12 @@ const initialNpaData: NpaData = {
         {
             id: 1, numero: '1', titulo: 'DISPOSIÇÕES PRELIMINARES', tituloEditavel: false, removivel: false, subsections: [
                 { id: 11, numero: '1.1', titulo: 'FINALIDADE', conteudo: 'A presente Norma Padrão de Ação (NPA) destina-se XXXXX', tituloEditavel: false, conteudoEditavel: true, removivel: false, subSubsections: [] },
-                { id: 12, numero: '1.2', titulo: 'CONCEITUAÇÃO', conteudo: '', tituloEditavel: false, conteudoEditavel: true, removivel: false, subSubsections: [] },
+                { id: 12, numero: '1.2', titulo: 'CONCEITUAÇÃO', conteudo: 'XXXXX', tituloEditavel: false, conteudoEditavel: true, removivel: false, subSubsections: [] },
                 { id: 13, numero: '1.3', titulo: 'ÂMBITO', conteudo: 'Esta NPA, de observância obrigatória, aplica-se à XXX do PAMALS.', tituloEditavel: false, conteudoEditavel: true, removivel: false, subSubsections: [] },
-                { id: 14, numero: '1.4', titulo: 'DEFINIÇÕES', conteudo: '', tituloEditavel: false, conteudoEditavel: true, removivel: false, subSubsections: [] },
-                { id: 15, numero: '1.5', titulo: 'RELACIONAMENTO', conteudo: '', tituloEditavel: false, conteudoEditavel: true, removivel: false, subSubsections: [] },
+                { id: 14, numero: '1.4', titulo: 'RELACIONAMENTO', conteudo: '', tituloEditavel: false, conteudoEditavel: false, removivel: false, subSubsections: [
+                    { id: 141, numero: '1.4.1', titulo: 'Com Unidades Externas', conteudo: 'XX' },
+                    { id: 142, numero: '1.4.2', titulo: 'Com Setores Internos', conteudo: 'XX' }
+                ] },
             ]
         },
         {
@@ -70,6 +72,12 @@ const App: React.FC = () => {
     const handleBodyContentChange = (sectionIndex: number, subsectionIndex: number, field: 'titulo' | 'conteudo', value: string) => {
         const newBody = [...npaData.body];
         (newBody[sectionIndex].subsections[subsectionIndex] as any)[field] = value;
+        setNpaData(prev => ({...prev, body: newBody}));
+    };
+
+    const handleSubSubContentChange = (sectionIndex: number, subsectionIndex: number, subSubIndex: number, field: 'titulo' | 'conteudo', value: string) => {
+        const newBody = [...npaData.body];
+        (newBody[sectionIndex].subsections[subsectionIndex].subSubsections[subSubIndex] as any)[field] = value;
         setNpaData(prev => ({...prev, body: newBody}));
     };
     
@@ -143,6 +151,33 @@ const App: React.FC = () => {
         });
     };
 
+    const addSubSubSection = (sectionIndex: number, subsectionIndex: number) => {
+        setNpaData(prev => {
+            const newBody = [...prev.body];
+            const targetSub = newBody[sectionIndex].subsections[subsectionIndex];
+            const newNum = `${targetSub.numero}.${targetSub.subSubsections.length + 1}`;
+            targetSub.subSubsections.push({
+                id: Date.now(),
+                numero: newNum,
+                titulo: '',
+                conteudo: ''
+            });
+            return { ...prev, body: newBody };
+        });
+    };
+
+    const removeSubSubSection = (sectionIndex: number, subsectionIndex: number, subSubId: number) => {
+        setNpaData(prev => {
+            const newBody = [...prev.body];
+            const targetSub = newBody[sectionIndex].subsections[subsectionIndex];
+            targetSub.subSubsections = targetSub.subSubsections.filter(s => s.id !== subSubId).map((s, idx) => {
+                s.numero = `${targetSub.numero}.${idx+1}`;
+                return s;
+            });
+            return { ...prev, body: newBody };
+        });
+    }
+
     const handleSignatureChange = (signer: 'propostoPor' | 'vistoPor' | 'aprovadoPor', field: 'nome' | 'cargo', value: string) => {
         setNpaData(prev => ({
             ...prev,
@@ -188,6 +223,7 @@ const App: React.FC = () => {
                             <TabCorpoTexto 
                                 data={npaData}
                                 onBodyContentChange={handleBodyContentChange}
+                                onSubSubContentChange={handleSubSubContentChange}
                                 onSectionTitleChange={handleSectionTitleChange}
                                 onSignatureChange={handleSignatureChange} 
                                 onDataChange={handleDataChange}
@@ -195,6 +231,8 @@ const App: React.FC = () => {
                                 removeSection={removeSection}
                                 addSubsection={addSubsection}
                                 removeSubsection={removeSubsection}
+                                addSubSubSection={addSubSubSection}
+                                removeSubSubSection={removeSubSubSection}
                             />
                         }
                         {activeTab === Tab.ANEXOS && <TabAnexos data={npaData} onDataChange={handleDataChange} />}
