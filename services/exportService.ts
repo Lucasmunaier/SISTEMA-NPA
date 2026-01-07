@@ -16,6 +16,7 @@ function formatDate(dateString: string): string {
 
 /**
  * Gera o HTML central do documento.
+ * Adiciona <p>&nbsp;</p> após títulos e subtítulos para conformidade militar.
  */
 function getDocumentHtml(data: NpaData): string {
     const formatText = (text: string) => {
@@ -28,14 +29,14 @@ function getDocumentHtml(data: NpaData): string {
         let pageCounter = 2; 
 
         const createSummaryRow = (text: string, pageNum: string, level: number) => {
-            const isSubsection = level === 1;
+            // Alinhamento vertical único (sem recuo para a direita)
             const fontWeight = level === 0 ? 'bold' : 'normal';
-            const textTransform = isSubsection ? 'uppercase' : 'none';
-            const textDecoration = isSubsection ? 'underline' : 'none';
+            const fontSize = level === 2 ? '10pt' : '11pt';
+            const paddingLeft = level === 2 ? '0.5cm' : '0'; // Pequeno recuo apenas para sub-itens de 3º nível para clareza, ou 0 para alinhamento total
             
             return `
-                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
-                    <span style="white-space: nowrap; padding-right: 5px; text-transform: ${textTransform}; text-decoration: ${textDecoration};">${text}</span>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: ${fontSize}; padding-left: ${paddingLeft}; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
+                    <span style="white-space: nowrap; padding-right: 5px;">${text.toUpperCase()}</span>
                     <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 0.9em; margin-bottom: 3px;"></div>
                     <span style="white-space: nowrap; padding-left: 10px; min-width: 25px; text-align: right;">${pageNum}</span>
                 </div>
@@ -46,6 +47,12 @@ function getDocumentHtml(data: NpaData): string {
             summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, 0);
             section.subsections.forEach(subsection => {
                  summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, 1);
+                 // Adiciona sub-subseções (indicativos de seção) no sumário
+                 if (subsection.subSubsections && subsection.subSubsections.length > 0) {
+                     subsection.subSubsections.forEach(sss => {
+                        summaryHtml += createSummaryRow(`${sss.numero} ${sss.titulo}`, `${pageCounter}`, 2);
+                     });
+                 }
             });
             pageCounter++;
         });
@@ -55,56 +62,46 @@ function getDocumentHtml(data: NpaData): string {
     };
 
     const totalEfetivoA = data.anexoA.reduce((sum, row) => sum + (row.efetivoProposto || 0), 0);
-    const grayBg = "background-color: #D9D9D9;";
 
     return `
             <!-- CAPA (PAGE 1) -->
-            <div class="page-container" id="page-1">
+            <div class="page-container">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
-                        <td style="width: 20%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
-                            <img src="${data.logo || PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 90px; max-height: 100px; height: auto;"/>
+                        <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
+                            <img src="${data.logo || PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 100px; max-height: 100px; height: auto;"/>
                         </td>
-                        <td style="width: 55%; text-align: center; padding: 10px; vertical-align: middle;">
+                        <td style="width: 50%; text-align: center; padding: 10px; vertical-align: middle;">
                             <strong style="font-size: 11pt; line-height: 1.2;">COMANDO DA AERONÁUTICA<br/>PARQUE DE MATERIAL AERONÁUTICO<br/>DE LAGOA SANTA</strong>
                             <br/><br/>
                             <strong style="font-size: 14pt;">NORMA PADRÃO DE AÇÃO</strong>
                         </td>
                         <td style="width: 25%; text-align: center; padding: 0; border-left: 2px solid black; vertical-align: top;">
                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr style="${grayBg} border-bottom: 1px solid black;">
-                                    <td style="padding: 2px; text-align: center; font-size: 8pt;"><strong>Nº DO DOCUMENTO</strong></td>
+                                <tr style="border-bottom: 1px solid black;">
+                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>Nº DO DOCUMENTO</strong><br/><span style="font-size: 10pt;">${data.numero}</span></td>
                                 </tr>
                                 <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center; font-size: 10pt; font-weight: bold;">${data.numero}</td>
-                                </tr>
-                                <tr style="${grayBg} border-bottom: 1px solid black;">
-                                    <td style="padding: 2px; text-align: center; font-size: 8pt;"><strong>EXPEDIÇÃO</strong></td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center; font-size: 10pt; font-weight: bold;">${formatDate(data.dataExpedicao)}</td>
-                                </tr>
-                                <tr style="${grayBg} border-bottom: 1px solid black;">
-                                    <td style="padding: 2px; text-align: center; font-size: 8pt;"><strong>VALIDADE</strong></td>
+                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>EXPEDIÇÃO</strong><br/><span style="font-size: 10pt;">${formatDate(data.dataExpedicao)}</span></td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px; text-align: center; font-size: 10pt; font-weight: bold;">${data.validade}</td>
+                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>VALIDADE</strong><br/><span style="font-size: 10pt;">${data.validade}</span></td>
                                 </tr>
                            </table>
                         </td>
                     </tr>
                     <tr>
-                        <td style="${grayBg} padding: 8px; border-top: 2px solid black; text-align: center; font-size: 10pt;"><strong>ASSUNTO</strong></td>
-                        <td colspan="2" style="padding: 8px; border-top: 2px solid black; border-left: 2px solid black;">${data.assunto}</td>
+                        <td style="padding: 8px; border-top: 2px solid black; text-align: center; font-size: 10pt;"><strong>ASSUNTO</strong></td>
+                        <td colspan="2" style="padding: 8px; border-top: 2px solid black; border-left: 2px solid black; font-weight: bold;">${data.assunto.toUpperCase()}</td>
                     </tr>
                     <tr>
-                        <td style="${grayBg} padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>ANEXOS</strong></td>
+                        <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>ANEXOS</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">
-                           ${data.anexos.map(a => `${a.letra} - ${a.titulo}`).join('<br/>')}
+                           ${data.anexos.map(a => `${a.letra} - ${a.titulo.toUpperCase()}`).join('<br/>')}
                         </td>
                     </tr>
                     <tr>
-                        <td style="${grayBg} padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>DISTRIBUIÇÃO</strong></td>
+                        <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>DISTRIBUIÇÃO</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">${data.distribuicao}</td>
                     </tr>
                 </table>
@@ -117,7 +114,7 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page-break"></div>
 
             <!-- CORPO DO TEXTO -->
-            <div class="page-container" id="page-content">
+            <div class="page-container">
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1cm;">
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
@@ -130,25 +127,25 @@ function getDocumentHtml(data: NpaData): string {
 
                                 ${subsection.titulo.includes('PROPOSIÇÃO') ? 
                                     `<div style="margin-top: 1cm; text-align: center;">
-                                        <div style="margin-bottom: 2cm; text-align: center;">
+                                        <div style="margin-bottom: 2cm;">
                                             <p style="text-align: left; margin-bottom: 0.5cm;">Proposto por:</p>
-                                            <div style="display: inline-block; width: 100%; text-align: center;">
+                                            <div style="display: inline-block; width: 350px;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.propostoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.propostoPor.cargo}
                                             </div>
                                         </div>
-                                         <div style="margin-bottom: 2cm; text-align: center;">
+                                         <div style="margin-bottom: 2cm;">
                                             <p style="text-align: left; margin-bottom: 0.5cm;">Visto por:</p>
-                                            <div style="display: inline-block; width: 100%; text-align: center;">
+                                            <div style="display: inline-block; width: 350px;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.vistoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.vistoPor.cargo}
                                             </div>
                                         </div>
-                                         <div style="margin-bottom: 2cm; text-align: center;">
+                                         <div style="margin-bottom: 2cm;">
                                             <p style="text-align: left; margin-bottom: 0.5cm;">Aprovado por:</p>
-                                            <div style="display: inline-block; width: 100%; text-align: center;">
+                                            <div style="display: inline-block; width: 350px;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.aprovadoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.aprovadoPor.cargo}
@@ -185,6 +182,7 @@ function getDocumentHtml(data: NpaData): string {
              <div class="page-container" style="margin-top: 1cm;">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
                 <div style="text-align: justify; line-height: 1.4;">
+                    <!-- Removido recuo conforme solicitado -->
                     <div style="text-indent: 0; padding: 0; margin: 0;">
                         ${formatText(data.referencias)}
                     </div>
@@ -341,18 +339,11 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 .page-break { 
                     page-break-after: always; 
                 }
-
-                .mirror-header {
-                    position: absolute;
-                    top: 15mm;
-                    left: 30mm;
-                    right: 20mm;
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 11pt;
-                    font-weight: bold;
-                }
-
+                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
+                p { margin: 0; }
+                strong { font-weight: bold; }
+                table { width: 100%; border-collapse: collapse; }
+                
                 @media print {
                     body { background: transparent; }
                     .page-container { 
@@ -360,13 +351,8 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                         box-shadow: none; 
                         width: 100%; 
                         padding: 30mm 20mm 20mm 30mm;
-                        overflow: hidden;
                     }
                 }
-                
-                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
-                p { margin: 0; }
-                table { width: 100%; border-collapse: collapse; }
             </style>
         </head>
         <body>
@@ -375,36 +361,9 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
             </div>
             <script>
                 window.onload = () => {
-                    const pages = document.querySelectorAll('.page-container');
-                    const totalPages = pages.length;
-                    const docNum = "${data.numero}";
-
-                    pages.forEach((page, index) => {
-                        const pageNum = index + 1;
-                        if (pageNum > 1) { 
-                            const headerDiv = document.createElement('div');
-                            headerDiv.className = 'mirror-header';
-                            
-                            const leftSpan = document.createElement('span');
-                            const rightSpan = document.createElement('span');
-                            
-                            if (pageNum % 2 === 0) {
-                                leftSpan.innerText = docNum;
-                                rightSpan.innerText = pageNum + " / " + totalPages;
-                            } else {
-                                leftSpan.innerText = pageNum + " / " + totalPages;
-                                rightSpan.innerText = docNum;
-                            }
-                            
-                            headerDiv.appendChild(leftSpan);
-                            headerDiv.appendChild(rightSpan);
-                            page.prepend(headerDiv);
-                        }
-                    });
-
                     setTimeout(() => {
                         window.print();
-                    }, 800);
+                    }, 500);
                 };
             </script>
         </body>
