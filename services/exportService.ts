@@ -116,7 +116,7 @@ function getDocumentHtml(data: NpaData): string {
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1cm;">
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
-                        <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
+                        <p>&nbsp;</p>
                         
                         ${section.subsections.map(subsection => {
                             const hasTitle = subsection.titulo && subsection.titulo.trim() !== "";
@@ -124,7 +124,7 @@ function getDocumentHtml(data: NpaData): string {
                                 <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
                                     ${hasTitle ? `
                                         <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
-                                        <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
+                                        <p>&nbsp;</p>
                                     ` : ''}
 
                                     ${subsection.titulo.includes('PROPOSIÇÃO') ? 
@@ -182,6 +182,7 @@ function getDocumentHtml(data: NpaData): string {
             <!-- REFERÊNCIAS -->
              <div class="page-container" style="margin-top: 1cm;">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
+                <p>&nbsp;</p>
                 <div class="rich-content" style="text-align: justify; line-height: 1.4;">
                     ${data.referencias}
                 </div>
@@ -311,7 +312,7 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Impressão NPA ${data.numero}</title>
+            <title>NPA ${data.numero}</title>
             <style>
                 @page { 
                     size: A4; 
@@ -320,23 +321,38 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 body { 
                     margin: 0; 
                     padding: 0; 
-                    background-color: #f1f5f9; 
+                    background-color: white; 
                     font-family: "Times New Roman", Times, serif;
+                    color: black;
                 }
                 .page-container {
-                    background: white;
                     width: 210mm;
                     min-height: 297mm;
                     padding: 30mm 20mm 20mm 30mm; /* S: 3cm, D: 2cm, I: 2cm, E: 3cm */
                     box-sizing: border-box;
-                    margin: 20px auto;
-                    color: black;
+                    margin: 0 auto;
                     line-height: 1.5;
                     text-align: justify;
                     position: relative;
+                    page-break-after: always;
                 }
-                .page-break { 
-                    page-break-after: always; 
+                @media print {
+                    .page-container { 
+                        margin: 0; 
+                        box-shadow: none; 
+                    }
+                }
+                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; margin: 0; }
+                p { margin: 0; }
+                table { width: 100%; border-collapse: collapse; }
+                img { max-width: 100%; height: auto; display: block; }
+
+                .rich-content p {
+                    text-indent: 2.5cm;
+                    margin-bottom: 0px;
+                }
+                .rich-content img {
+                    margin: 10px auto;
                 }
 
                 .mirror-header {
@@ -350,25 +366,6 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                     font-weight: bold;
                     pointer-events: none;
                 }
-
-                @media print {
-                    body { background: transparent; }
-                    .page-container { 
-                        margin: 0; 
-                        box-shadow: none; 
-                        width: 100%; 
-                        padding: 30mm 20mm 20mm 30mm;
-                        overflow: visible;
-                    }
-                }
-                
-                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
-                p { margin: 0; }
-                table { width: 100%; border-collapse: collapse; }
-                img { max-width: 100%; height: auto; display: block; }
-                
-                .rich-content p { margin-bottom: 0.5cm; }
-                .rich-content img { margin: 10px 0; }
             </style>
         </head>
         <body>
@@ -386,16 +383,13 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                         if (pageNum > 1) { 
                             const headerDiv = document.createElement('div');
                             headerDiv.className = 'mirror-header';
-                            
                             const leftSpan = document.createElement('span');
                             const rightSpan = document.createElement('span');
                             
                             if (pageNum % 2 === 0) {
-                                // Páginas Pares: Número do Doc à esquerda, Paginação à direita
                                 leftSpan.innerText = docNum;
                                 rightSpan.innerText = pageNum + " / " + totalPages;
                             } else {
-                                // Páginas Ímpares: Paginação à esquerda, Número do Doc à direita
                                 leftSpan.innerText = pageNum + " / " + totalPages;
                                 rightSpan.innerText = docNum;
                             }
@@ -406,10 +400,9 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                         }
                     });
 
-                    // Pequeno atraso para garantir renderização de imagens complexas
                     setTimeout(() => {
                         window.print();
-                    }, 500);
+                    }, 800);
                 };
             </script>
         </body>
