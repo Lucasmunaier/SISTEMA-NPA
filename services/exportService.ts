@@ -28,7 +28,6 @@ function getDocumentHtml(data: NpaData): string {
         let pageCounter = 2; 
 
         const createSummaryRow = (text: string, pageNum: string, level: number) => {
-            // Alinhamento vertical único conforme solicitado (mesma coluna)
             const isSubsection = level === 1;
             const fontWeight = level === 0 ? 'bold' : 'normal';
             const textTransform = isSubsection ? 'uppercase' : 'none';
@@ -36,7 +35,7 @@ function getDocumentHtml(data: NpaData): string {
             
             return `
                 <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
-                    <span style="white-space: nowrap; padding-right: 5px; text-transform: ${textTransform}; text-decoration: ${textDecoration};">${text.toUpperCase()}</span>
+                    <span style="white-space: nowrap; padding-right: 5px; text-transform: ${textTransform}; text-decoration: ${textDecoration};">${text}</span>
                     <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 0.9em; margin-bottom: 3px;"></div>
                     <span style="white-space: nowrap; padding-left: 10px; min-width: 25px; text-align: right;">${pageNum}</span>
                 </div>
@@ -47,7 +46,6 @@ function getDocumentHtml(data: NpaData): string {
             summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, 0);
             section.subsections.forEach(subsection => {
                  summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, 1);
-                 // Sub-subseções removidas do sumário conforme solicitado
             });
             pageCounter++;
         });
@@ -57,46 +55,56 @@ function getDocumentHtml(data: NpaData): string {
     };
 
     const totalEfetivoA = data.anexoA.reduce((sum, row) => sum + (row.efetivoProposto || 0), 0);
+    const grayBg = "background-color: #D9D9D9;";
 
     return `
             <!-- CAPA (PAGE 1) -->
             <div class="page-container" id="page-1">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
-                        <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
-                            <img src="${data.logo || PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 100px; max-height: 100px; height: auto;"/>
+                        <td style="width: 20%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
+                            <img src="${data.logo || PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 90px; max-height: 100px; height: auto;"/>
                         </td>
-                        <td style="width: 50%; text-align: center; padding: 10px; vertical-align: middle;">
+                        <td style="width: 55%; text-align: center; padding: 10px; vertical-align: middle;">
                             <strong style="font-size: 11pt; line-height: 1.2;">COMANDO DA AERONÁUTICA<br/>PARQUE DE MATERIAL AERONÁUTICO<br/>DE LAGOA SANTA</strong>
                             <br/><br/>
                             <strong style="font-size: 14pt;">NORMA PADRÃO DE AÇÃO</strong>
                         </td>
                         <td style="width: 25%; text-align: center; padding: 0; border-left: 2px solid black; vertical-align: top;">
                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>Nº DO DOCUMENTO</strong><br/><span style="font-size: 10pt;">${data.numero}</span></td>
+                                <tr style="${grayBg} border-bottom: 1px solid black;">
+                                    <td style="padding: 2px; text-align: center; font-size: 8pt;"><strong>Nº DO DOCUMENTO</strong></td>
                                 </tr>
                                 <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>EXPEDIÇÃO</strong><br/><span style="font-size: 10pt;">${formatDate(data.dataExpedicao)}</span></td>
+                                    <td style="padding: 5px; text-align: center; font-size: 10pt; font-weight: bold;">${data.numero}</td>
+                                </tr>
+                                <tr style="${grayBg} border-bottom: 1px solid black;">
+                                    <td style="padding: 2px; text-align: center; font-size: 8pt;"><strong>EXPEDIÇÃO</strong></td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid black;">
+                                    <td style="padding: 5px; text-align: center; font-size: 10pt; font-weight: bold;">${formatDate(data.dataExpedicao)}</td>
+                                </tr>
+                                <tr style="${grayBg} border-bottom: 1px solid black;">
+                                    <td style="padding: 2px; text-align: center; font-size: 8pt;"><strong>VALIDADE</strong></td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>VALIDADE</strong><br/><span style="font-size: 10pt;">${data.validade}</span></td>
+                                    <td style="padding: 5px; text-align: center; font-size: 10pt; font-weight: bold;">${data.validade}</td>
                                 </tr>
                            </table>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px; border-top: 2px solid black; text-align: center; font-size: 10pt;"><strong>ASSUNTO</strong></td>
-                        <td colspan="2" style="padding: 8px; border-top: 2px solid black; border-left: 2px solid black; font-weight: bold;">${data.assunto.toUpperCase()}</td>
+                        <td style="${grayBg} padding: 8px; border-top: 2px solid black; text-align: center; font-size: 10pt;"><strong>ASSUNTO</strong></td>
+                        <td colspan="2" style="padding: 8px; border-top: 2px solid black; border-left: 2px solid black;">${data.assunto}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>ANEXOS</strong></td>
+                        <td style="${grayBg} padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>ANEXOS</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">
-                           ${data.anexos.map(a => `${a.letra} - ${a.titulo.toUpperCase()}`).join('<br/>')}
+                           ${data.anexos.map(a => `${a.letra} - ${a.titulo}`).join('<br/>')}
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>DISTRIBUIÇÃO</strong></td>
+                        <td style="${grayBg} padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>DISTRIBUIÇÃO</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">${data.distribuicao}</td>
                     </tr>
                 </table>
@@ -117,7 +125,6 @@ function getDocumentHtml(data: NpaData): string {
                         
                         ${section.subsections.map(subsection => `
                             <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
-                                <!-- Subseção em CAIXA ALTA e Sublinhada -->
                                 <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
                                 <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
 
@@ -335,7 +342,6 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                     page-break-after: always; 
                 }
 
-                /* Lógica de Cabeçalho Espelhado */
                 .mirror-header {
                     position: absolute;
                     top: 15mm;
@@ -356,7 +362,6 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                         padding: 30mm 20mm 20mm 30mm;
                         overflow: hidden;
                     }
-                    /* Oculta os cabeçalhos em tela, mas aparecem na impressão via injeção JS abaixo */
                 }
                 
                 h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
@@ -376,16 +381,13 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
 
                     pages.forEach((page, index) => {
                         const pageNum = index + 1;
-                        if (pageNum > 1) { // Cabeçalho espelhado começa após a capa
+                        if (pageNum > 1) { 
                             const headerDiv = document.createElement('div');
                             headerDiv.className = 'mirror-header';
                             
                             const leftSpan = document.createElement('span');
                             const rightSpan = document.createElement('span');
                             
-                            // Espelhamento: 
-                            // Páginas Pares (2, 4, 6...): DocNum (Esquerda) | Page (Direita)
-                            // Páginas Ímpares (3, 5, 7...): Page (Esquerda) | DocNum (Direita)
                             if (pageNum % 2 === 0) {
                                 leftSpan.innerText = docNum;
                                 rightSpan.innerText = pageNum + " / " + totalPages;
