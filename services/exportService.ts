@@ -370,8 +370,10 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 
                 /* Estilos para listas no PDF */
                 ul { list-style-type: disc; margin-left: 1.5cm; }
-                ol { list-style-type: decimal; margin-left: 1.5cm; }
-                li { padding-left: 5px; }
+                ol { margin-left: 1.5cm; }
+                ol[type="a"] { list-style-type: lower-alpha; }
+                ol:not([type]) { list-style-type: decimal; }
+                li { padding-left: 5px; margin-bottom: 5px; }
             </style>
         </head>
         <body>
