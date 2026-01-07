@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { NpaData } from '../types';
+import MilitaryEditor from './MilitaryEditor';
 
 interface TabCorpoTextoProps {
     data: NpaData;
@@ -112,11 +113,10 @@ const TabCorpoTexto: React.FC<TabCorpoTextoProps> = ({
                                     </div>
 
                                     {(!subsection.subSubsections || subsection.subSubsections.length === 0 || subsection.conteudo !== '') && (
-                                        <textarea
+                                        <MilitaryEditor
                                             value={subsection.conteudo}
-                                            onChange={(e) => onBodyContentChange(sectionIndex, subsectionIndex, 'conteudo', e.target.value)}
+                                            onChange={(val) => onBodyContentChange(sectionIndex, subsectionIndex, 'conteudo', val)}
                                             placeholder="Digite o texto do parágrafo aqui..."
-                                            className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:border-cyan-500 outline-none min-h-[100px] resize-y font-serif text-[12pt]"
                                         />
                                     )}
 
@@ -137,10 +137,10 @@ const TabCorpoTexto: React.FC<TabCorpoTextoProps> = ({
                                                         </div>
                                                         <button onClick={() => removeSubSubSection(sectionIndex, subsectionIndex, sss.id)} className="text-red-500 hover:text-red-400 font-bold text-[10px] ml-2 bg-gray-900 px-2 py-1 rounded transition-colors">remover</button>
                                                     </div>
-                                                    <textarea
+                                                    <MilitaryEditor
                                                         value={sss.conteudo}
-                                                        onChange={(e) => onSubSubContentChange(sectionIndex, subsectionIndex, sssIdx, 'conteudo', e.target.value)}
-                                                        className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:border-cyan-500 outline-none min-h-[80px] resize-y font-serif text-[12pt]"
+                                                        onChange={(val) => onSubSubContentChange(sectionIndex, subsectionIndex, sssIdx, 'conteudo', val)}
+                                                        minHeight="80px"
                                                         placeholder="Digite o texto da alínea..."
                                                     />
                                                 </div>
@@ -159,10 +159,10 @@ const TabCorpoTexto: React.FC<TabCorpoTextoProps> = ({
             </button>
             <div className="mt-12">
                  <h3 className="text-xl font-bold text-cyan-400 border-b-2 border-gray-700 pb-2 mb-4 uppercase">REFERÊNCIAS</h3>
-                 <textarea
+                 <MilitaryEditor
                     value={data.referencias}
-                    onChange={(e) => onDataChange('referencias', e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:border-cyan-500 outline-none min-h-[150px] resize-y font-serif text-[12pt]"
+                    onChange={(val) => onDataChange('referencias', val)}
+                    minHeight="200px"
                     placeholder="Liste aqui as referências bibliográficas..."
                  />
             </div>

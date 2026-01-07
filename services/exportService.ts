@@ -15,11 +15,17 @@ function formatDate(dateString: string): string {
 }
 
 /**
- * Converte quebras de linha em <br/> para renderização correta no HTML de exportação.
+ * Converte quebras de linha em <br/> se o conteúdo não for HTML puro, 
+ * mas agora que usamos MilitaryEditor, o conteúdo já virá como HTML.
  */
 function formatContent(text: string): string {
     if (!text) return '';
-    return text.replace(/\n/g, '<br/>');
+    // Como o MilitaryEditor gera HTML, apenas retornamos. 
+    // Se por acaso vier texto puro com \n, convertemos para br.
+    if (!text.includes('<') && text.includes('\n')) {
+        return text.replace(/\n/g, '<br/>');
+    }
+    return text;
 }
 
 /**
@@ -253,173 +259,3 @@ function getDocumentHtml(data: NpaData): string {
                 <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo B - Matriz de Qualificação</p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
                     <thead>
-                        <tr style="background-color: #f3f4f6;">
-                            <th style="border: 1px solid black; padding: 6px;">Qualificação Desejável</th>
-                            <th style="border: 1px solid black; padding: 6px;">Sigla</th>
-                            <th style="border: 1px solid black; padding: 6px;">Legislação</th>
-                            <th style="border: 1px solid black; padding: 6px;">Prioridade</th>
-                            <th style="border: 1px solid black; padding: 6px;">CH</th>
-                            <th style="border: 1px solid black; padding: 6px;">ENC</th>
-                            <th style="border: 1px solid black; padding: 6px;">AUX</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.anexoB.map(row => `
-                            <tr>
-                                <td style="border: 1px solid black; padding: 5px;">${row.qualificacao}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.sigla}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.legislacao}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.prioridade}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorCh}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorEnc}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorAux}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <p style="font-size: 8pt; margin-top: 10px;"><strong>LEGENDA:</strong> 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
-            </div>
-    `;
-}
-
-export const exportToDocx = async (data: NpaData): Promise<void> => {
-    const htmlToDocx = (window as any).htmlToDocx;
-    if (!htmlToDocx) {
-        alert('Erro: Biblioteca DOCX não carregada.');
-        return;
-    }
-
-    const headerHtml = `<div style="width: 100%; font-family: 'Times New Roman'; font-size: 11pt;">
-        <table style="width: 100%;"><tr>
-            <td style="text-align: left;">${data.numero}</td>
-            <td style="text-align: right;">{PAGENUM}</td>
-        </tr></table>
-    </div>`;
-    
-    const content = `<div style="font-family: 'Times New Roman'; font-size: 12pt;">${getDocumentHtml(data)}</div>`;
-    const fileBuffer = await htmlToDocx.asBlob(content, {
-        orientation: 'portrait',
-        margins: { top: 1417, bottom: 1134, left: 1700, right: 1134 },
-        header: { html: headerHtml, type: 'default' },
-    });
-
-    const url = URL.createObjectURL(fileBuffer);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `NPA_${data.numero.replace(/[\/\s]/g, '_')}.docx`;
-    link.click();
-    URL.revokeObjectURL(url);
-};
-
-export const exportToPdf = async (data: NpaData): Promise<void> => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-        alert('Por favor, habilite pop-ups para exportar o PDF.');
-        return;
-    }
-
-    const htmlContent = getDocumentHtml(data);
-
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>NPA ${data.numero}</title>
-            <style>
-                @page { 
-                    size: A4; 
-                    margin: 0; 
-                }
-                body { 
-                    margin: 0; 
-                    padding: 0; 
-                    background-color: #f1f5f9; 
-                    font-family: "Times New Roman", Times, serif;
-                }
-                .page-container {
-                    background: white;
-                    width: 210mm;
-                    min-height: 297mm;
-                    padding: 30mm 20mm 20mm 30mm; /* S: 3cm, D: 2cm, I: 2cm, E: 3cm */
-                    box-sizing: border-box;
-                    margin: 20px auto;
-                    color: black;
-                    line-height: 1.5;
-                    text-align: justify;
-                    position: relative;
-                }
-                .page-break { 
-                    page-break-after: always; 
-                }
-
-                .mirror-header {
-                    position: absolute;
-                    top: 15mm;
-                    left: 30mm;
-                    right: 20mm;
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 11pt;
-                    font-weight: bold;
-                }
-
-                @media print {
-                    body { background: transparent; }
-                    .page-container { 
-                        margin: 0; 
-                        box-shadow: none; 
-                        width: 100%; 
-                        padding: 30mm 20mm 20mm 30mm;
-                        overflow: hidden;
-                    }
-                }
-                
-                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; font-family: 'Times New Roman'; }
-                p { margin: 0; font-family: 'Times New Roman'; }
-                table { width: 100%; border-collapse: collapse; font-family: 'Times New Roman'; }
-                img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-            </style>
-        </head>
-        <body>
-            <div id="print-root">
-                ${htmlContent}
-            </div>
-            <script>
-                window.onload = () => {
-                    const pages = document.querySelectorAll('.page-container');
-                    const totalPages = pages.length;
-                    const docNum = "${data.numero}";
-
-                    pages.forEach((page, index) => {
-                        const pageNum = index + 1;
-                        if (pageNum > 1) { 
-                            const headerDiv = document.createElement('div');
-                            headerDiv.className = 'mirror-header';
-                            
-                            const leftSpan = document.createElement('span');
-                            const rightSpan = document.createElement('span');
-                            
-                            if (pageNum % 2 === 0) {
-                                leftSpan.innerText = docNum;
-                                rightSpan.innerText = pageNum + " / " + totalPages;
-                            } else {
-                                leftSpan.innerText = pageNum + " / " + totalPages;
-                                rightSpan.innerText = docNum;
-                            }
-                            
-                            headerDiv.appendChild(leftSpan);
-                            headerDiv.appendChild(rightSpan);
-                            page.prepend(headerDiv);
-                        }
-                    });
-
-                    setTimeout(() => {
-                        window.print();
-                    }, 800);
-                };
-            </script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-};
