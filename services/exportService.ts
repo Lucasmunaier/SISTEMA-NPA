@@ -15,6 +15,14 @@ function formatDate(dateString: string): string {
 }
 
 /**
+ * Converte quebras de linha em <br/> para renderização correta no HTML de exportação.
+ */
+function formatContent(text: string): string {
+    if (!text) return '';
+    return text.replace(/\n/g, '<br/>');
+}
+
+/**
  * Gera o HTML central do documento.
  */
 function getDocumentHtml(data: NpaData): string {
@@ -25,15 +33,14 @@ function getDocumentHtml(data: NpaData): string {
         const createSummaryRow = (text: string, pageNum: string, level: number) => {
             const isSubsection = level === 1;
             const fontWeight = level === 0 ? 'bold' : 'normal';
-            // Subseções em CAIXA ALTA e Sublinhadas no Sumário
             const textTransform = isSubsection ? 'uppercase' : 'none';
             const textDecoration = isSubsection ? 'underline' : 'none';
             
             return `
                 <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
-                    <span style="white-space: nowrap; padding-right: 5px; text-transform: ${textTransform}; text-decoration: ${textDecoration};">${text}</span>
+                    <span style="white-space: nowrap; padding-right: 5px; text-transform: ${textTransform}; text-decoration: ${textDecoration}; font-family: 'Times New Roman';">${text}</span>
                     <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 0.9em; margin-bottom: 3px;"></div>
-                    <span style="white-space: nowrap; padding-left: 10px; min-width: 25px; text-align: right;">${pageNum}</span>
+                    <span style="white-space: nowrap; padding-left: 10px; min-width: 25px; text-align: right; font-family: 'Times New Roman';">${pageNum}</span>
                 </div>
             `;
         };
@@ -56,7 +63,7 @@ function getDocumentHtml(data: NpaData): string {
     return `
             <!-- CAPA (PAGE 1) -->
             <div class="page-container" id="page-1">
-                <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid black; font-family: 'Times New Roman';">
                     <tr>
                         <td style="width: 20%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
                             <img src="${data.logo || PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 90px; max-height: 100px; height: auto;"/>
@@ -105,7 +112,7 @@ function getDocumentHtml(data: NpaData): string {
                     </tr>
                 </table>
                 <div style="margin-top: 3cm;">
-                    <h2 style="text-align: center; font-size: 14pt; text-transform: uppercase; font-weight: bold; margin-bottom: 20px;">SUMÁRIO</h2>
+                    <h2 style="text-align: center; font-size: 14pt; text-transform: uppercase; font-weight: bold; margin-bottom: 20px; font-family: 'Times New Roman';">SUMÁRIO</h2>
                     ${generateSummary()}
                 </div>
             </div>
@@ -113,7 +120,7 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page-break"></div>
 
             <!-- CORPO DO TEXTO -->
-            <div class="page-container" id="page-content">
+            <div class="page-container" id="page-content" style="font-family: 'Times New Roman';">
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1cm;">
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
@@ -130,7 +137,7 @@ function getDocumentHtml(data: NpaData): string {
 
                                     ${subsection.titulo.includes('PROPOSIÇÃO') ? 
                                         `<div style="margin-top: 1cm; text-align: center;">
-                                            <div style="margin-bottom: 2cm; text-align: center;">
+                                            <div style="margin-bottom: 1.5cm; text-align: center;">
                                                 <p style="text-align: left; margin-bottom: 0.5cm;">Proposto por:</p>
                                                 <div style="display: inline-block; width: 100%; text-align: center;">
                                                     _____________________________________<br/>
@@ -138,7 +145,7 @@ function getDocumentHtml(data: NpaData): string {
                                                     ${data.assinaturas.propostoPor.cargo}
                                                 </div>
                                             </div>
-                                            <div style="margin-bottom: 2cm; text-align: center;">
+                                            <div style="margin-bottom: 1.5cm; text-align: center;">
                                                 <p style="text-align: left; margin-bottom: 0.5cm;">Visto por:</p>
                                                 <div style="display: inline-block; width: 100%; text-align: center;">
                                                     _____________________________________<br/>
@@ -146,7 +153,7 @@ function getDocumentHtml(data: NpaData): string {
                                                     ${data.assinaturas.vistoPor.cargo}
                                                 </div>
                                             </div>
-                                            <div style="margin-bottom: 2cm; text-align: center;">
+                                            <div style="margin-bottom: 1.5cm; text-align: center;">
                                                 <p style="text-align: left; margin-bottom: 0.5cm;">Aprovado por:</p>
                                                 <div style="display: inline-block; width: 100%; text-align: center;">
                                                     _____________________________________<br/>
@@ -160,7 +167,7 @@ function getDocumentHtml(data: NpaData): string {
                                             ${subsection.conteudo ? `
                                                 <div style="text-align: justify; line-height: 1.5; font-family: 'Times New Roman', serif;">
                                                     ${!hasTitle ? `<strong>${subsection.numero}</strong> ` : ''}
-                                                    ${subsection.conteudo}
+                                                    ${formatContent(subsection.conteudo)}
                                                 </div>
                                             ` : ''}
                                             
@@ -169,7 +176,7 @@ function getDocumentHtml(data: NpaData): string {
                                                     ${subsection.subSubsections.map(sss => `
                                                         <div style="margin-bottom: 0.5cm;">
                                                             ${sss.titulo ? `<p style="margin: 0; font-weight: bold;">${sss.numero} ${sss.titulo}</p>` : `<strong>${sss.numero}</strong> `}
-                                                            <div style="text-align: justify; line-height: 1.5;">${sss.conteudo}</div>
+                                                            <div style="text-align: justify; line-height: 1.5; font-family: 'Times New Roman', serif;">${formatContent(sss.conteudo)}</div>
                                                         </div>
                                                     `).join('')}
                                                 </div>` 
@@ -185,11 +192,11 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page-break"></div>
 
             <!-- REFERÊNCIAS -->
-             <div class="page-container" style="margin-top: 1cm;">
+             <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
                 <div style="text-align: justify; line-height: 1.4;">
                     <div style="text-indent: 0; padding: 0; margin: 0;">
-                        ${data.referencias}
+                        ${formatContent(data.referencias)}
                     </div>
                 </div>
              </div>
@@ -197,7 +204,7 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page-break"></div>
 
             <!-- ANEXO A -->
-            <div class="page-container" style="margin-top: 1cm;">
+            <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
                 <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo A - Tabela de Efetivo Proposto</p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1px solid black;">
                     <thead>
@@ -242,7 +249,7 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page-break"></div>
 
             <!-- ANEXO B -->
-            <div class="page-container" style="margin-top: 1cm;">
+            <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
                 <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo B - Matriz de Qualificação</p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
                     <thead>
@@ -367,10 +374,10 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                     }
                 }
                 
-                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
-                p { margin: 0; }
-                table { width: 100%; border-collapse: collapse; }
-                img { max-width: 100%; height: auto; display: block; }
+                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; font-family: 'Times New Roman'; }
+                p { margin: 0; font-family: 'Times New Roman'; }
+                table { width: 100%; border-collapse: collapse; font-family: 'Times New Roman'; }
+                img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
             </style>
         </head>
         <body>
