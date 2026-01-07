@@ -47,10 +47,10 @@ function getDocumentHtml(data: NpaData): string {
     };
 
     return `
-        <div id="documentRoot" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: black; line-height: 1.5; text-align: justify; background: white; width: 210mm; margin: 0 auto;">
+        <div id="documentRoot" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: black; line-height: 1.5; text-align: justify; background: white; width: 170mm; margin: 0 auto; padding-top: 10px;">
             
             <!-- CAPA (PAGE 1) -->
-            <div class="page" style="width: 210mm; height: 297mm; padding: 20mm; box-sizing: border-box; page-break-after: always; position: relative; border: 1px solid transparent;">
+            <div class="page" style="width: 170mm; min-height: 250mm; box-sizing: border-box; page-break-after: always; position: relative;">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
                         <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
@@ -97,35 +97,35 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- CORPO DO TEXTO (PAGES 2+) -->
-            <div class="page-content-container" style="padding: 0; box-sizing: border-box;">
+            <div class="page-content-container">
                  ${data.body.map(section => `
-                    <div style="padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always; min-height: 297mm;">
+                    <div style="margin-bottom: 2em; page-break-inside: avoid;">
                         <!-- SEÇÃO TÍTULO -->
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
                         <!-- LINHA EM BRANCO OBRIGATÓRIA -->
-                        <div style="height: 1.2em;"></div>
+                        <p style="margin: 0;">&nbsp;</p>
                         
                         ${section.subsections.map(subsection => `
-                            <div style="margin-bottom: 1.5em;">
+                            <div style="margin-bottom: 1.5em; page-break-inside: avoid;">
                                 <!-- SUBTÍTULO -->
                                 <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
                                 <!-- LINHA EM BRANCO OBRIGATÓRIA -->
-                                <div style="height: 1.2em;"></div>
+                                <p style="margin: 0;">&nbsp;</p>
 
                                 ${subsection.titulo.includes('PROPOSIÇÃO') ? 
                                     `<div style="margin-top: 1cm;">
                                         <table style="width: 100%; border-collapse: collapse;">
                                             <tr>
-                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 2cm;">Proposto por:</td>
-                                                <td style="width: 67%; text-align: center; padding-bottom: 2cm;">
+                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 1.5cm;">Proposto por:</td>
+                                                <td style="width: 67%; text-align: center; padding-bottom: 1.5cm;">
                                                     _____________________________________<br/>
                                                     ${data.assinaturas.propostoPor.nome.toUpperCase()}<br/>
                                                     ${data.assinaturas.propostoPor.cargo}
                                                 </td>
                                             </tr>
                                              <tr>
-                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 2cm;">Visto por:</td>
-                                                <td style="width: 67%; text-align: center; padding-bottom: 2cm;">
+                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 1.5cm;">Visto por:</td>
+                                                <td style="width: 67%; text-align: center; padding-bottom: 1.5cm;">
                                                     _____________________________________<br/>
                                                     ${data.assinaturas.vistoPor.nome.toUpperCase()}<br/>
                                                     ${data.assinaturas.vistoPor.cargo}
@@ -151,7 +151,7 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- REFERÊNCIAS -->
-             <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+             <div style="page-break-before: always; width: 100%;">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.5em; text-align: center;">REFERÊNCIAS</p>
                 <div style="text-align: justify; line-height: 1.4;">
                     <p style="margin-bottom: 1em; text-indent: 2.5cm;">${formatText(data.referencias)}</p>
@@ -159,7 +159,7 @@ function getDocumentHtml(data: NpaData): string {
              </div>
 
             <!-- ANEXO A -->
-            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+            <div style="page-break-before: always; width: 100%;">
                 <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 2em;">Anexo A - Tabela de Efetivo Proposto</p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1.2px solid black; table-layout: fixed;">
                     <thead>
@@ -202,7 +202,7 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- ANEXO B -->
-            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+            <div style="page-break-before: always; width: 100%;">
                 <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 2em;">Anexo B - Matriz de Qualificação</p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1.2px solid black;">
                     <thead>
@@ -284,14 +284,13 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
         putOnlyUsedFonts: true
     });
 
-    // We use 'times' native font for text rendering
     doc.setFont('times', 'normal');
 
     await doc.html(element, {
         callback: function (doc: any) {
             const totalPages = doc.internal.getNumberOfPages();
             
-            // Header logic for pages 2+
+            // Header for pages 2+
             for (let i = 2; i <= totalPages; i++) {
                 doc.setPage(i);
                 doc.setFontSize(10);
@@ -301,9 +300,8 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 const pageNum = i.toString();
                 const pageNumWidth = doc.getTextWidth(pageNum);
                 
-                // Set text color to black
                 doc.setTextColor(0, 0, 0);
-                // NPA Number on top-left, Page Number on top-right
+                // Margins for headers (30mm left, 20mm right)
                 doc.text(data.numero, 30, 15); 
                 doc.text(pageNum, pageWidth - pageNumWidth - 20, 15);
             }
@@ -314,11 +312,11 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
         x: 0,
         y: 0,
         width: 210, 
-        windowWidth: 794, // 210mm at 96 DPI
+        windowWidth: 800, // Fixed window width to prevent scale issues
         autoPaging: 'text',
         margin: [0, 0, 0, 0],
         html2canvas: {
-            scale: 1,
+            scale: 1, // Must be 1 for correct proportion in jsPDF.html
             logging: false,
             useCORS: true,
             letterRendering: true
