@@ -133,7 +133,7 @@ function getDocumentHtml(data: NpaData): string {
                                                 <p style="text-align: left; margin-bottom: 0.5cm;">Proposto por:</p>
                                                 <div style="display: inline-block; width: 100%; text-align: center;">
                                                     _____________________________________<br/>
-                                                    ${data.assinaturas.propostoPor.nome.toUpperCase()}<br/>
+                                                    ${data.assinaturas.propostoPor.nome}<br/>
                                                     ${data.assinaturas.propostoPor.cargo}
                                                 </div>
                                             </div>
@@ -141,7 +141,7 @@ function getDocumentHtml(data: NpaData): string {
                                                 <p style="text-align: left; margin-bottom: 0.5cm;">Visto por:</p>
                                                 <div style="display: inline-block; width: 100%; text-align: center;">
                                                     _____________________________________<br/>
-                                                    ${data.assinaturas.vistoPor.nome.toUpperCase()}<br/>
+                                                    ${data.assinaturas.vistoPor.nome}<br/>
                                                     ${data.assinaturas.vistoPor.cargo}
                                                 </div>
                                             </div>
@@ -149,7 +149,7 @@ function getDocumentHtml(data: NpaData): string {
                                                 <p style="text-align: left; margin-bottom: 0.5cm;">Aprovado por:</p>
                                                 <div style="display: inline-block; width: 100%; text-align: center;">
                                                     _____________________________________<br/>
-                                                    ${data.assinaturas.aprovadoPor.nome.toUpperCase()}<br/>
+                                                    ${data.assinaturas.aprovadoPor.nome}<br/>
                                                     ${data.assinaturas.aprovadoPor.cargo}
                                                 </div>
                                             </div>
@@ -318,6 +318,10 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 @page { 
                     size: A4; 
                     margin: 0; 
+                }
+                * {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
                 }
                 body { 
                     margin: 0; 
