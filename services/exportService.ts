@@ -1,4 +1,3 @@
-
 import { NpaData } from '../types';
 import { PAMA_LS_LOGO_B64 } from '../assets/logo';
 
@@ -116,7 +115,7 @@ function getDocumentHtml(data: NpaData): string {
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1cm;">
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
-                        <p>&nbsp;</p>
+                        <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
                         
                         ${section.subsections.map(subsection => {
                             const hasTitle = subsection.titulo && subsection.titulo.trim() !== "";
@@ -124,7 +123,7 @@ function getDocumentHtml(data: NpaData): string {
                                 <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
                                     ${hasTitle ? `
                                         <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
-                                        <p>&nbsp;</p>
+                                        <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
                                     ` : ''}
 
                                     ${subsection.titulo.includes('PROPOSIÇÃO') ? 
@@ -181,8 +180,8 @@ function getDocumentHtml(data: NpaData): string {
 
             <!-- REFERÊNCIAS -->
              <div class="page-container" style="margin-top: 1cm;">
-                <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
-                <p>&nbsp;</p>
+                <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 0.5cm; text-align: center;">REFERÊNCIAS</p>
+                <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
                 <div class="rich-content" style="text-align: justify; line-height: 1.4;">
                     ${data.referencias}
                 </div>
@@ -387,9 +386,11 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                             const rightSpan = document.createElement('span');
                             
                             if (pageNum % 2 === 0) {
+                                // Páginas Pares: DocNum (Esquerda), Página (Direita)
                                 leftSpan.innerText = docNum;
                                 rightSpan.innerText = pageNum + " / " + totalPages;
                             } else {
+                                // Páginas Ímpares: Página (Esquerda), DocNum (Direita)
                                 leftSpan.innerText = pageNum + " / " + totalPages;
                                 rightSpan.innerText = docNum;
                             }
