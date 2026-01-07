@@ -30,7 +30,6 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
 
     const insertAlphaList = () => {
         exec('insertOrderedList');
-        // Ajusta o tipo da lista para alfabética logo após a criação
         setTimeout(() => {
             const selection = window.getSelection();
             if (selection && selection.anchorNode) {
@@ -49,8 +48,31 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Tab') {
             e.preventDefault();
-            const tabHtml = '<span style="display: inline-block; width: 2.5cm;">&nbsp;</span>';
-            document.execCommand('insertHTML', false, tabHtml);
+            
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return;
+
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+
+            // Cria o elemento de recuo militar (2.5cm)
+            const tabNode = document.createElement('span');
+            tabNode.style.display = 'inline-block';
+            tabNode.style.width = '2.5cm';
+            tabNode.style.whiteSpace = 'pre';
+            tabNode.innerHTML = '&nbsp;';
+            tabNode.contentEditable = 'false'; // Evita que o usuário delete apenas parte do recuo
+            tabNode.className = 'military-indent';
+
+            range.insertNode(tabNode);
+
+            // Move o cursor para depois do nó inserido
+            range.setStartAfter(tabNode);
+            range.setEndAfter(tabNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            handleInput();
         }
     };
 
@@ -87,7 +109,15 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
         { icon: '•', title: 'Lista de Marcadores', cmd: () => exec('insertUnorderedList') },
         { icon: '1.', title: 'Lista Numérica', cmd: () => exec('insertOrderedList') },
         { icon: 'a.', title: 'Lista Alfabética', cmd: insertAlphaList },
-        { icon: '⇥', title: 'Recuo Militar (2.5cm / TAB)', cmd: () => exec('insertHTML', '<span style="display: inline-block; width: 2.5cm;">&nbsp;</span>') },
+        { 
+            icon: '⇥', 
+            title: 'Recuo Militar (2.5cm / TAB)', 
+            cmd: () => {
+                // Simula o evento de Tab para reutilizar a lógica robusta
+                const event = new KeyboardEvent('keydown', { key: 'Tab' });
+                handleKeyDown(event as any);
+            } 
+        },
         { icon: '⌫', title: 'Limpar Formatação', cmd: () => exec('removeFormat') },
     ];
 
@@ -136,6 +166,11 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
                 .pell-content i, .pell-content em { font-style: italic; }
                 .pell-content u { text-decoration: underline; }
                 
+                .military-indent {
+                    user-select: none;
+                    -webkit-user-modify: read-only;
+                }
+
                 .pell-button {
                     font-family: inherit;
                     font-size: 14px;
