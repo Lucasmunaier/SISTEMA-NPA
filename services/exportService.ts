@@ -19,17 +19,17 @@ function getDocumentHtml(data: NpaData): string {
     const formatText = (text: string) => text.replace(/\n/g, '<br/>');
 
     const generateSummary = () => {
-        let summaryHtml = '<div style="width: 100%;">';
-        // Placeholder page numbers, as calculating them from HTML is not feasible here.
+        let summaryHtml = '<div style="width: 100%; margin-top: 20px;">';
+        // Placeholder page numbers
         let pageCounter = 2; 
 
         const createSummaryRow = (text: string, pageNum: string, isSub: boolean) => {
             const style = isSub ? 'padding-left: 1.5cm;' : 'font-weight: bold;';
             return `
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; line-height: 1.3; font-size: 11pt; margin: 0; padding: 0;">
-                    <span style="white-space: nowrap; padding-right: 4px;">${text.toUpperCase()}</span>
-                    <span style="width: 100%; border-bottom: 1px dotted black; margin-bottom: 4px;"></span>
-                    <span style="white-space: nowrap; padding-left: 4px;">${pageNum}</span>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; margin-bottom: 2px; ${style}">
+                    <span style="white-space: nowrap; padding-right: 5px;">${text.toUpperCase()}</span>
+                    <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 1em; margin-bottom: 3px;"></div>
+                    <span style="white-space: nowrap; padding-left: 5px;">${pageNum}</span>
                 </div>
             `;
         };
@@ -39,83 +39,86 @@ function getDocumentHtml(data: NpaData): string {
             section.subsections.forEach(subsection => {
                  summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, true);
             });
+            // Approximate increment
+            pageCounter++;
         });
-        summaryHtml += createSummaryRow('REFERÊNCIAS', `${pageCounter + 1}`, false);
+        summaryHtml += createSummaryRow('REFERÊNCIAS', `${pageCounter}`, false);
+        summaryHtml += '</div>';
         return summaryHtml;
     };
 
     return `
-        <div id="documentRoot" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: black; line-height: 1.5; text-align: justify;">
+        <div id="documentRoot" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: black; line-height: 1.5; text-align: justify; background: white;">
             
             <!-- Page 1: Cover Page -->
-            <div class="page" style="width: 21cm; height: 29.7cm; padding: 2cm; box-sizing: border-box; page-break-after: always; background-color: white;">
+            <div class="page" style="width: 210mm; height: 297mm; padding: 20mm; box-sizing: border-box; page-break-after: always; position: relative;">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
                         <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
-                            <img src="${PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 80px; height: auto;"/>
+                            <img src="${PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 70px; height: auto;"/>
                         </td>
                         <td style="width: 50%; text-align: center; padding: 10px; vertical-align: middle;">
-                            <strong style="font-size: 13pt;">COMANDO DA AERONÁUTICA<br/>PARQUE DE MATERIAL AERONÁUTICO<br/>DE LAGOA SANTA</strong>
+                            <strong style="font-size: 12pt; line-height: 1.2;">COMANDO DA AERONÁUTICA<br/>PARQUE DE MATERIAL AERONÁUTICO<br/>DE LAGOA SANTA</strong>
                             <br/><br/>
                             <strong style="font-size: 14pt;">NORMA PADRÃO DE AÇÃO</strong>
                         </td>
                         <td style="width: 25%; text-align: center; padding: 0; border-left: 2px solid black; vertical-align: top;">
-                           <table style="width: 100%; height: 100%; border-collapse: collapse;">
+                           <table style="width: 100%; border-collapse: collapse;">
                                 <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center;"><strong>Nº DO DOCUMENTO</strong><br/>${data.numero}</td>
+                                    <td style="padding: 5px; text-align: center; font-size: 9pt;"><strong>Nº DO DOCUMENTO</strong><br/><span style="font-size: 10pt;">${data.numero}</span></td>
                                 </tr>
                                 <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center;"><strong>EXPEDIÇÃO</strong><br/>${formatDate(data.dataExpedicao)}</td>
+                                    <td style="padding: 5px; text-align: center; font-size: 9pt;"><strong>EXPEDIÇÃO</strong><br/><span style="font-size: 10pt;">${formatDate(data.dataExpedicao)}</span></td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px; text-align: center;"><strong>VALIDADE</strong><br/>${data.validade}</td>
+                                    <td style="padding: 5px; text-align: center; font-size: 9pt;"><strong>VALIDADE</strong><br/><span style="font-size: 10pt;">${data.validade}</span></td>
                                 </tr>
                             </table>
                         </td>
                     </tr>
                      <tr>
-                        <td style="padding: 8px; border-top: 2px solid black; text-align: center;"><strong>ASSUNTO</strong></td>
+                        <td style="padding: 8px; border-top: 2px solid black; text-align: center; font-size: 10pt;"><strong>ASSUNTO</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 2px solid black; border-left: 2px solid black;">${data.assunto}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px; border-top: 1px solid black; text-align: center;"><strong>ANEXOS</strong></td>
+                        <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>ANEXOS</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">
                            ${data.anexos.map(a => `${a.letra} - ${a.titulo}`).join('<br/>')}
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px; border-top: 1px solid black; text-align: center;"><strong>DISTRIBUIÇÃO</strong></td>
+                        <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>DISTRIBUIÇÃO</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">${data.distribuicao}</td>
                     </tr>
                 </table>
-                <div style="margin-top: 5cm;">
-                    <h2 style="text-align: center; font-size: 16pt; text-transform: uppercase;">Sumário</h2>
+                <div style="margin-top: 4cm;">
+                    <h2 style="text-align: center; font-size: 14pt; text-transform: uppercase; font-weight: bold; margin-bottom: 10px;">SUMÁRIO</h2>
                     ${generateSummary()}
                 </div>
             </div>
 
             <!-- Content Pages -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
+            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always; position: relative;">
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1.5em;">
-                        <p style="text-transform: uppercase;"><strong>${section.numero} ${section.titulo}</strong></p>
+                        <p style="text-transform: uppercase; margin-bottom: 0.5em;"><strong>${section.numero} ${section.titulo}</strong></p>
                         ${section.subsections.map(subsection => `
-                            <div style="margin-top: 1em;">
-                                <p style="text-transform: uppercase;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
+                            <div style="margin-top: 0.8em;">
+                                <p style="text-transform: uppercase; margin-bottom: 0.3em;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
                                 ${subsection.titulo.includes('PROPOSIÇÃO') ? 
-                                    `<div style="margin-top: 3cm;">
+                                    `<div style="margin-top: 2cm;">
                                         <table style="width: 100%; border-collapse: collapse;">
                                             <tr>
-                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 3cm;">Proposto por:</td>
-                                                <td style="width: 67%; text-align: center; padding-bottom: 3cm;">
+                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 2cm;">Proposto por:</td>
+                                                <td style="width: 67%; text-align: center; padding-bottom: 2cm;">
                                                     _____________________________________<br/>
                                                     ${data.assinaturas.propostoPor.nome}<br/>
                                                     ${data.assinaturas.propostoPor.cargo}
                                                 </td>
                                             </tr>
                                              <tr>
-                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 3cm;">Visto por:</td>
-                                                <td style="width: 67%; text-align: center; padding-bottom: 3cm;">
+                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 2cm;">Visto por:</td>
+                                                <td style="width: 67%; text-align: center; padding-bottom: 2cm;">
                                                     _____________________________________<br/>
                                                     ${data.assinaturas.vistoPor.nome}<br/>
                                                     ${data.assinaturas.vistoPor.cargo}
@@ -132,7 +135,7 @@ function getDocumentHtml(data: NpaData): string {
                                         </table>
                                     </div>` 
                                 : 
-                                    `<p style="text-indent: 2.5cm;">${formatText(subsection.conteudo)}</p>`
+                                    `<p style="text-indent: 2.5cm; margin: 0; text-align: justify;">${formatText(subsection.conteudo)}</p>`
                                 }
                             </div>
                         `).join('')}
@@ -141,43 +144,41 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- Referencias Page -->
-             <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
-                <p style="font-weight: bold; text-transform: uppercase;">REFERÊNCIAS</p>
-                <p>${formatText(data.referencias)}</p>
+             <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+                <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1em;">REFERÊNCIAS</p>
+                <p style="text-indent: 2.5cm; text-align: justify;">${formatText(data.referencias)}</p>
              </div>
 
-            <!-- Anexos Pages -->
             <!-- Anexo A -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
-                <p style="text-align: center; font-weight: bold;">Anexo A - Tabela de Efetivo Proposto</p>
-                <br/>
-                <table style="width: 100%; border-collapse: collapse; font-size: 10pt; border: 1px solid black;">
+            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5em;">Anexo A - Tabela de Efetivo Proposto</p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
                     <thead>
-                        <tr style="background-color: #e0e0e0; font-weight: bold;">
-                            <th style="border: 1px solid black; padding: 4px; text-align: center; vertical-align: middle;" rowspan="2">Função</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;" colspan="3">Previsão Principal</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;" colspan="3">Previsão Alternativa</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center; vertical-align: middle;" rowspan="2">Efetivo Proposto</th>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid black; padding: 4px;" rowspan="2">Função</th>
+                            <th style="border: 1px solid black; padding: 4px;" colspan="3">Previsão Principal</th>
+                            <th style="border: 1px solid black; padding: 4px;" colspan="3">Previsão Alternativa</th>
+                            <th style="border: 1px solid black; padding: 4px;" rowspan="2">Efetivo Proposto</th>
                         </tr>
-                        <tr style="background-color: #e0e0e0; font-weight: bold;">
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Posto/Grad</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Quadro</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Espec.</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Posto/Grad</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Quadro</th>
-                            <th style="border: 1px solid black; padding: 4px; text-align: center;">Espec.</th>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid black; padding: 4px;">Posto/Grad</th>
+                            <th style="border: 1px solid black; padding: 4px;">Quadro</th>
+                            <th style="border: 1px solid black; padding: 4px;">Espec.</th>
+                            <th style="border: 1px solid black; padding: 4px;">Posto/Grad</th>
+                            <th style="border: 1px solid black; padding: 4px;">Quadro</th>
+                            <th style="border: 1px solid black; padding: 4px;">Espec.</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${data.anexoA.map(row => `
                             <tr>
                                 <td style="border: 1px solid black; padding: 4px;">${row.funcao}</td>
-                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoPrincipal.postoGrad}</td>
-                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoPrincipal.quadro}</td>
-                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoPrincipal.especialidade}</td>
-                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoAlternativa.postoGrad}</td>
-                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoAlternativa.quadro}</td>
-                                <td style="border: 1px solid black; padding: 4px;">${row.previsaoAlternativa.especialidade}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.postoGrad}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.quadro}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.especialidade}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.postoGrad}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.quadro}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.especialidade}</td>
                                 <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.efetivoProposto}</td>
                             </tr>
                         `).join('')}
@@ -192,12 +193,11 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- Anexo B -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
-                <p style="text-align: center; font-weight: bold;">Anexo B - Matriz de Qualificação</p>
-                <br/>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid black;">
+            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5em;">Anexo B - Matriz de Qualificação</p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 10pt; border: 1px solid black;">
                     <thead>
-                        <tr style="background-color: #e0e0e0;">
+                        <tr style="background-color: #f2f2f2;">
                             <th style="border: 1px solid black; padding: 5px; text-align: center;">Qualificação Desejável</th>
                             <th style="border: 1px solid black; padding: 5px; text-align: center;">Sigla</th>
                             <th style="border: 1px solid black; padding: 5px; text-align: center;">Legislação</th>
@@ -222,15 +222,8 @@ function getDocumentHtml(data: NpaData): string {
                     </tbody>
                 </table>
                 <br/>
-                <p style="font-size: 10pt; border-top: 1px solid black; padding-top: 8px; margin-top: 8px;"><strong>LEGENDA:</strong> COLUNAS DOS CARGOS: 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
-            </div>
-
-            <!-- Anexo C -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; background-color: white;">
-                <p style="text-align: center; font-weight: bold;">Anexo C - Fluxograma Bizagi</p>
-                <br/><br/>
-                <div style="width: 100%; height: 20cm; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center;">
-                    <p style="color: #888;">(Espaço reservado para colar a imagem do fluxograma)</p>
+                <div style="border-top: 1px solid black; padding-top: 10px;">
+                    <p style="font-size: 9pt;"><strong>LEGENDA:</strong> COLUNAS DOS CARGOS: 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
                 </div>
             </div>
         </div>
@@ -240,131 +233,78 @@ function getDocumentHtml(data: NpaData): string {
 export const exportToDocx = async (data: NpaData): Promise<void> => {
     const htmlToDocx = (window as any).htmlToDocx;
     if (!htmlToDocx) {
-        console.error('html-to-docx-ts library is not loaded.');
-        alert('Erro: A biblioteca de exportação (html-to-docx-ts) não foi carregada. Verifique sua conexão com a internet ou se algum bloqueador de scripts está ativo.');
+        alert('Erro: Biblioteca DOCX não carregada.');
         return;
     }
 
-    const headerHtml = `
-        <div style="width: 100%; font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
-            <table style="width: 100%;">
-                <tr>
-                    <td style="width: 50%; text-align: left;">${data.numero}</td>
-                    <td style="width: 50%; text-align: right;">{PAGENUM}</td>
-                </tr>
-            </table>
-        </div>`;
-    const content = getDocumentHtml(data);
+    const headerHtml = `<div style="width: 100%; font-family: 'Times New Roman'; font-size: 12pt;">
+        <table style="width: 100%;"><tr>
+            <td style="text-align: left;">${data.numero}</td>
+            <td style="text-align: right;">{PAGENUM}</td>
+        </tr></table>
+    </div>`;
     
+    const content = getDocumentHtml(data);
     const fileBuffer = await htmlToDocx.asBlob(content, {
         orientation: 'portrait',
-        margins: {
-            top: 1134,
-            bottom: 756,
-            left: 1134,
-            right: 756,
-            header: 425,
-            footer: 425,
-        },
-        header: {
-            html: headerHtml,
-            type: 'default',
-        },
+        margins: { top: 1700, bottom: 1134, left: 1700, right: 1134 },
+        header: { html: headerHtml, type: 'default' },
     });
 
     const url = URL.createObjectURL(fileBuffer);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `NPA_${data.numero.replace(/[\/\s]/g, '_') || 'documento'}.docx`;
-    document.body.appendChild(link);
+    link.download = `NPA_${data.numero.replace(/[\/\s]/g, '_')}.docx`;
     link.click();
-    document.body.removeChild(link);
     URL.revokeObjectURL(url);
 };
 
-
 export const exportToPdf = async (data: NpaData): Promise<void> => {
-    const jspdf = (window as any).jspdf;
-    const html2canvas = (window as any).html2canvas;
-
-    if (!jspdf || !html2canvas) {
-        const errorMsg = 'Erro: Bibliotecas de exportação (jspdf, html2canvas) não foram carregadas.';
-        console.error(errorMsg);
-        alert(errorMsg);
-        throw new Error('PDF export libraries not loaded');
-    }
-
+    const { jsPDF } = (window as any).jspdf;
+    
     const previewContainer = document.getElementById('document-preview-container');
-    if (!previewContainer) {
-        const errorMsg = 'Container de preview do documento não encontrado.';
-        console.error(errorMsg);
-        throw new Error(errorMsg);
-    }
+    if (!previewContainer) return;
 
     previewContainer.innerHTML = getDocumentHtml(data);
-    const documentRoot = previewContainer.querySelector<HTMLElement>('#documentRoot');
-    if (!documentRoot) {
-        const errorMsg = 'Elemento raiz do documento para exportação não encontrado.';
-        console.error(errorMsg);
-        throw new Error(errorMsg);
-    }
-    
-    try {
-        const { jsPDF } = jspdf;
-        const doc = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4',
-        });
+    const element = previewContainer.querySelector('#documentRoot') as HTMLElement;
 
-        const pages = Array.from(documentRoot.querySelectorAll<HTMLElement>('.page'));
-        const pdfWidth = doc.internal.pageSize.getWidth();
-        const pdfHeight = doc.internal.pageSize.getHeight();
+    const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+        putOnlyUsedFonts: true,
+        floatPrecision: 16
+    });
 
-        for (let i = 0; i < pages.length; i++) {
-            const page = pages[i];
-            const canvas = await html2canvas(page, {
-                scale: 2, // Higher scale for better quality
-                useCORS: true,
-            });
+    // Use built-in 'times' font which maps to Times New Roman
+    doc.setFont('times', 'normal');
 
-            // Use JPEG for smaller file sizes
-            const imgData = canvas.toDataURL('image/jpeg', 0.92);
-
-            if (i > 0) {
-                doc.addPage();
+    await doc.html(element, {
+        callback: function (doc: any) {
+            const totalPages = doc.internal.getNumberOfPages();
+            
+            // Add headers for subsequent pages
+            for (let i = 2; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(11);
+                doc.setFont('times', 'normal');
+                
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageNum = i.toString();
+                const pageNumWidth = doc.getTextWidth(pageNum);
+                
+                doc.text(data.numero, 30, 15); // NPA Number at top-left
+                doc.text(pageNum, pageWidth - pageNumWidth - 20, 15); // Page Number at top-right
             }
             
-            doc.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-        }
-        
-        // Add headers to all pages except the first one
-        const totalPages = doc.internal.getNumberOfPages();
-        const headerText = data.numero;
-        const leftMargin = 30; // 3cm
-        const rightMargin = 20; // 2cm
-        const headerY = 15; // 1.5cm from top
-        
-        for (let i = 2; i <= totalPages; i++) {
-            doc.setPage(i);
-            doc.setFontSize(12);
-            doc.setFont('times', 'normal');
-            
-            const pageNumText = `${i}`;
-            const pageNumWidth = doc.getTextWidth(pageNumText);
-            
-            // Set text color to black for headers
-            doc.setTextColor(0, 0, 0);
-            doc.text(headerText, leftMargin, headerY);
-            doc.text(pageNumText, pdfWidth - pageNumWidth - rightMargin, headerY);
-        }
-
-        doc.save(`NPA_${data.numero.replace(/[\/\s]/g, '_') || 'documento'}.pdf`);
-    } catch (err) {
-        console.error("Erro durante a geração do PDF:", err);
-        alert("Ocorreu um erro inesperado ao gerar o PDF.");
-        throw err; // Re-throw to be caught by the handler in App.tsx
-    } finally {
-        previewContainer.innerHTML = ''; // Clean up
-    }
+            doc.save(`NPA_${data.numero.replace(/[\/\s]/g, '_')}.pdf`);
+            previewContainer.innerHTML = '';
+        },
+        x: 0,
+        y: 0,
+        width: 210, // Target width in mm (A4)
+        windowWidth: 794, // Standard 21cm width in px at 96 DPI
+        autoPaging: 'text',
+        margin: [0, 0, 0, 0], // Margins are already in the HTML page styles
+    });
 };

@@ -14,7 +14,7 @@ const TabIdentificacao: React.FC<TabIdentificacaoProps> = ({ data, onDataChange 
     };
 
     const addAnexo = () => {
-        const lastLetra = data.anexos.length > 0 ? data.anexos[data.anexos.length - 1].letra : '@'; // '@' before 'A'
+        const lastLetra = data.anexos.length > 0 ? data.anexos[data.anexos.length - 1].letra : '@';
         const newLetra = String.fromCharCode(lastLetra.charCodeAt(0) + 1);
         const newAnexo: Anexo = {
             id: Date.now(),
@@ -35,7 +35,6 @@ const TabIdentificacao: React.FC<TabIdentificacaoProps> = ({ data, onDataChange 
 
     const removeAnexo = (id: number) => {
         let remainingAnexos = data.anexos.filter(anexo => anexo.id !== id);
-        // Recalculate letters
         remainingAnexos = remainingAnexos.map((anexo, index) => ({
             ...anexo,
             letra: String.fromCharCode('A'.charCodeAt(0) + index)
@@ -113,7 +112,7 @@ const TabIdentificacao: React.FC<TabIdentificacaoProps> = ({ data, onDataChange 
                         value={data.distribuicao}
                         onChange={(e) => onDataChange('distribuicao', e.target.value)}
                         className="w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                        placeholder="Todos os setores do PAMA LS"
+                        placeholder="Ex: B"
                     />
                 </div>
             </div>
