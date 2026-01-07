@@ -29,12 +29,13 @@ function getDocumentHtml(data: NpaData): string {
         let pageCounter = 2; 
 
         const createSummaryRow = (text: string, pageNum: string, level: number) => {
-            // Indentação militar: Alinhado verticalmente com o número da seção acima
-            // Seção principal: 0, Subseção: 0.8cm (ou alinhado, conforme feedback do usuário)
-            const paddingLeft = level === 1 ? '0.8cm' : '0';
+            // Alinhamento vertical único (sem recuo para a direita)
             const fontWeight = level === 0 ? 'bold' : 'normal';
+            const fontSize = level === 2 ? '10pt' : '11pt';
+            const paddingLeft = level === 2 ? '0.5cm' : '0'; // Pequeno recuo apenas para sub-itens de 3º nível para clareza, ou 0 para alinhamento total
+            
             return `
-                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; padding-left: ${paddingLeft}; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: ${fontSize}; padding-left: ${paddingLeft}; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
                     <span style="white-space: nowrap; padding-right: 5px;">${text.toUpperCase()}</span>
                     <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 0.9em; margin-bottom: 3px;"></div>
                     <span style="white-space: nowrap; padding-left: 10px; min-width: 25px; text-align: right;">${pageNum}</span>
@@ -46,6 +47,12 @@ function getDocumentHtml(data: NpaData): string {
             summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, 0);
             section.subsections.forEach(subsection => {
                  summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, 1);
+                 // Adiciona sub-subseções (indicativos de seção) no sumário
+                 if (subsection.subSubsections && subsection.subSubsections.length > 0) {
+                     subsection.subSubsections.forEach(sss => {
+                        summaryHtml += createSummaryRow(`${sss.numero} ${sss.titulo}`, `${pageCounter}`, 2);
+                     });
+                 }
             });
             pageCounter++;
         });
@@ -111,36 +118,34 @@ function getDocumentHtml(data: NpaData): string {
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1cm;">
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
-                        <!-- LINHA EM BRANCO OBRIGATÓRIA -->
                         <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
                         
                         ${section.subsections.map(subsection => `
                             <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
                                 <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
-                                <!-- LINHA EM BRANCO OBRIGATÓRIA -->
                                 <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
 
                                 ${subsection.titulo.includes('PROPOSIÇÃO') ? 
-                                    `<div style="margin-top: 1cm;">
-                                        <div style="margin-bottom: 1.5cm;">
-                                            <p style="margin-bottom: 1cm;">Proposto por:</p>
-                                            <div style="text-align: center; width: 60%; margin-left: 30%;">
+                                    `<div style="margin-top: 1cm; text-align: center;">
+                                        <div style="margin-bottom: 2cm;">
+                                            <p style="text-align: left; margin-bottom: 0.5cm;">Proposto por:</p>
+                                            <div style="display: inline-block; width: 350px;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.propostoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.propostoPor.cargo}
                                             </div>
                                         </div>
-                                         <div style="margin-bottom: 1.5cm;">
-                                            <p style="margin-bottom: 1cm;">Visto por:</p>
-                                            <div style="text-align: center; width: 60%; margin-left: 30%;">
+                                         <div style="margin-bottom: 2cm;">
+                                            <p style="text-align: left; margin-bottom: 0.5cm;">Visto por:</p>
+                                            <div style="display: inline-block; width: 350px;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.vistoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.vistoPor.cargo}
                                             </div>
                                         </div>
-                                         <div style="margin-bottom: 1.5cm;">
-                                            <p style="margin-bottom: 1cm;">Aprovado por:</p>
-                                            <div style="text-align: center; width: 60%; margin-left: 30%;">
+                                         <div style="margin-bottom: 2cm;">
+                                            <p style="text-align: left; margin-bottom: 0.5cm;">Aprovado por:</p>
+                                            <div style="display: inline-block; width: 350px;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.aprovadoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.aprovadoPor.cargo}
@@ -162,7 +167,6 @@ function getDocumentHtml(data: NpaData): string {
                                             </div>` 
                                         : ''}
                                         
-                                        <!-- LINHA EM BRANCO OBRIGATÓRIA APÓS BLOCO DE TEXTO -->
                                         <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
                                     </div>`
                                 }
@@ -178,8 +182,10 @@ function getDocumentHtml(data: NpaData): string {
              <div class="page-container" style="margin-top: 1cm;">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
                 <div style="text-align: justify; line-height: 1.4;">
-                    <!-- Removido text-indent solicitado -->
-                    <p style="margin-bottom: 1em;">${formatText(data.referencias)}</p>
+                    <!-- Removido recuo conforme solicitado -->
+                    <div style="text-indent: 0; padding: 0; margin: 0;">
+                        ${formatText(data.referencias)}
+                    </div>
                 </div>
              </div>
 
