@@ -45,6 +45,24 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
         }, 0);
     };
 
+    const insertImage = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e: any) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event: any) => {
+                    const img = `<img src="${event.target.result}" style="max-width: 100%; height: auto; display: block; margin: 10px 0; border: 1px solid #ccc; padding: 2px;" />`;
+                    exec('insertHTML', img);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Tab') {
             e.preventDefault();
@@ -55,18 +73,16 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
             const range = selection.getRangeAt(0);
             range.deleteContents();
 
-            // Cria o elemento de recuo militar (2.5cm)
             const tabNode = document.createElement('span');
             tabNode.style.display = 'inline-block';
             tabNode.style.width = '2.5cm';
             tabNode.style.whiteSpace = 'pre';
             tabNode.innerHTML = '&nbsp;';
-            tabNode.contentEditable = 'false'; // Evita que o usuário delete apenas parte do recuo
+            tabNode.contentEditable = 'false';
             tabNode.className = 'military-indent';
 
             range.insertNode(tabNode);
 
-            // Move o cursor para depois do nó inserido
             range.setStartAfter(tabNode);
             range.setEndAfter(tabNode);
             selection.removeAllRanges();
@@ -93,7 +109,7 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
                     if (match.includes('text-decoration:underline')) kept.push('text-decoration:underline');
                     return kept.length > 0 ? `style="${kept.join(';')}"` : '';
                 })
-                .replace(/<(?!b|i|u|p|br|ul|ol|li|span|strong|em|div)[^>]+>/gi, '');
+                .replace(/<(?!b|i|u|p|br|ul|ol|li|span|strong|em|div|img)[^>]+>/gi, '');
 
             document.execCommand('insertHTML', false, cleanHtml || text.replace(/\n/g, '<br>'));
         } else {
@@ -113,17 +129,16 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
             icon: '⇥', 
             title: 'Recuo Militar (2.5cm / TAB)', 
             cmd: () => {
-                // Simula o evento de Tab para reutilizar a lógica robusta
                 const event = new KeyboardEvent('keydown', { key: 'Tab' });
                 handleKeyDown(event as any);
             } 
         },
+        { icon: '🖼️', title: 'Inserir Imagem', cmd: insertImage },
         { icon: '⌫', title: 'Limpar Formatação', cmd: () => exec('removeFormat') },
     ];
 
     return (
         <div className="pell-container flex flex-col border border-gray-400 rounded-sm overflow-hidden shadow-sm bg-white">
-            {/* Action Bar */}
             <div className="pell-actionbar bg-gray-50 border-b border-gray-300 flex flex-wrap p-1 gap-1 select-none">
                 {actions.map((act, i) => (
                     <button
@@ -138,7 +153,6 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
                 ))}
             </div>
 
-            {/* Content Area */}
             <div
                 ref={editorRef}
                 contentEditable
@@ -165,6 +179,7 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
                 .pell-content b, .pell-content strong { font-weight: bold; }
                 .pell-content i, .pell-content em { font-style: italic; }
                 .pell-content u { text-decoration: underline; }
+                .pell-content img { max-width: 100%; height: auto; margin: 10px auto; }
                 
                 .military-indent {
                     user-select: none;

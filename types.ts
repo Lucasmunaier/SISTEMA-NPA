@@ -11,6 +11,7 @@ export interface Anexo {
     titulo: string;
     tipo: 'efetivo' | 'qualificacao' | 'fluxograma' | 'custom';
     editavel: boolean;
+    conteudo?: string;
 }
 
 export interface SubSubSection {

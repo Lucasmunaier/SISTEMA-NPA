@@ -1,5 +1,5 @@
 
-import { NpaData } from '../types';
+import { NpaData, Anexo } from '../types';
 import { PAMA_LS_LOGO_B64 } from '../assets/logo';
 
 function formatDate(dateString: string): string {
@@ -54,7 +54,8 @@ function getDocumentHtml(data: NpaData): string {
     const totalEfetivoA = data.anexoA.reduce((sum, row) => sum + (row.efetivoProposto || 0), 0);
     const grayBg = "background-color: #D9D9D9;";
 
-    return `
+    // Base document HTML
+    let html = `
             <div class="page-container" id="page-1">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black; font-family: 'Times New Roman';">
                     <tr>
@@ -191,11 +192,16 @@ function getDocumentHtml(data: NpaData): string {
                     </div>
                 </div>
              </div>
+    `;
 
-            <div class="page-break"></div>
+    // Dynamic Annexes
+    data.anexos.forEach(anexo => {
+        html += `<div class="page-break"></div>`;
+        html += `<div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">`;
+        html += `<p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1cm;">Anexo ${anexo.letra} - ${anexo.titulo}</p>`;
 
-            <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
-                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo A - Tabela de Efetivo Proposto</p>
+        if (anexo.tipo === 'efetivo') {
+            html += `
                 <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1px solid black;">
                     <thead>
                         <tr style="background-color: #f3f4f6;">
@@ -234,12 +240,9 @@ function getDocumentHtml(data: NpaData): string {
                         </tr>
                     </tfoot>
                 </table>
-            </div>
-
-            <div class="page-break"></div>
-
-            <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
-                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo B - Matriz de Qualificação</p>
+            `;
+        } else if (anexo.tipo === 'qualificacao') {
+            html += `
                 <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
                     <thead>
                         <tr style="background-color: #f3f4f6;">
@@ -267,8 +270,18 @@ function getDocumentHtml(data: NpaData): string {
                     </tbody>
                 </table>
                 <p style="font-size: 8pt; margin-top: 10px;"><strong>LEGENDA:</strong> 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
-            </div>
-    `;
+            `;
+        } else {
+            // Fluxograma and Custom types
+            html += `<div style="text-align: justify; line-height: 1.5; font-family: 'Times New Roman', serif;">
+                ${anexo.conteudo || '<p style="color: #666; font-style: italic;">Sem conteúdo para este anexo.</p>'}
+            </div>`;
+        }
+        
+        html += `</div>`;
+    });
+
+    return html;
 }
 
 export const exportToDocx = async (data: NpaData): Promise<void> => {
@@ -372,7 +385,6 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 table { width: 100%; border-collapse: collapse; font-family: 'Times New Roman'; }
                 img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
                 
-                /* Estilos para listas no PDF */
                 ul { list-style-type: disc; margin-left: 1.5cm; }
                 ol { margin-left: 1.5cm; }
                 ol[type="a"] { list-style-type: lower-alpha; }
