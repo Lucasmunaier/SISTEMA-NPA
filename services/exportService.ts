@@ -1,10 +1,10 @@
-// services/exportService.ts
+
 import { NpaData } from '../types';
 import { PAMA_LS_LOGO_B64 } from '../assets/logo';
 
 function formatDate(dateString: string): string {
     if (!dateString) return '';
-    const date = new Date(dateString + 'T00:00:00');
+    const date = new Date(dateString + 'T00:00:00'); // Ensure it's parsed as local time
     
     const day = String(date.getDate()).padStart(2, '0');
     const months = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
@@ -15,57 +15,47 @@ function formatDate(dateString: string): string {
 }
 
 function getDocumentHtml(data: NpaData): string {
+    const totalEfetivoA = data.anexoA.reduce((sum, row) => sum + (row.efetivoProposto || 0), 0);
     const formatText = (text: string) => text.replace(/\n/g, '<br/>');
 
     const generateSummary = () => {
-        let summaryHtml = '<div style="width: 100%; margin-top: 10px;">';
-        let pageCounter = 2;
+        let summaryHtml = '<div style="width: 100%; margin-top: 20px;">';
+        // Placeholder page numbers
+        let pageCounter = 2; 
 
-        const createSummaryRow = (text: string, pageNum: string, level: number) => {
-            const paddingLeft = level === 1 ? '1.5cm' : '0';
-            const fontWeight = level === 0 ? 'bold' : 'normal';
+        const createSummaryRow = (text: string, pageNum: string, isSub: boolean) => {
+            const style = isSub ? 'padding-left: 1.5cm;' : 'font-weight: bold;';
             return `
-                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; padding-left: ${paddingLeft}; margin-bottom: 4px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; margin-bottom: 2px; ${style}">
                     <span style="white-space: nowrap; padding-right: 5px;">${text.toUpperCase()}</span>
-                    <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 0.9em; margin-bottom: 3px;"></div>
+                    <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 1em; margin-bottom: 3px;"></div>
                     <span style="white-space: nowrap; padding-left: 5px;">${pageNum}</span>
                 </div>
             `;
         };
 
-        if (data.body && Array.isArray(data.body)) {
-            data.body.forEach(section => {
-                if (section && section.numero && section.titulo) {
-                    summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, 0);
-                    pageCounter++;
-                    
-                    if (section.subsections && Array.isArray(section.subsections)) {
-                        section.subsections.forEach(subsection => {
-                            if (subsection && subsection.numero && subsection.titulo) {
-                                summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, 1);
-                            }
-                        });
-                    }
-                }
+        data.body.forEach(section => {
+            summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, false);
+            section.subsections.forEach(subsection => {
+                 summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, true);
             });
-        }
-        
-        summaryHtml += createSummaryRow('REFERÊNCIAS', `${pageCounter + 1}`, 0);
+            // Approximate increment
+            pageCounter++;
+        });
+        summaryHtml += createSummaryRow('REFERÊNCIAS', `${pageCounter}`, false);
         summaryHtml += '</div>';
         return summaryHtml;
     };
 
-    const totalEfetivoA = data.anexoA ? data.anexoA.reduce((sum, row) => sum + (row.efetivoProposto || 0), 0) : 0;
-
     return `
-        <div id="documentRoot" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: black; line-height: 1.5; text-align: justify; background: white; width: 160mm; margin: 0; padding: 0;">
+        <div id="documentRoot" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: black; line-height: 1.5; text-align: justify; background: white;">
             
-            <!-- CAPA (PAGE 1) -->
-            <div class="page" style="width: 100%; min-height: 240mm; box-sizing: border-box; page-break-after: always; position: relative;">
+            <!-- Page 1: Cover Page -->
+            <div class="page" style="width: 210mm; height: 297mm; padding: 20mm; box-sizing: border-box; page-break-after: always; position: relative;">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
                         <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
-                            <img src="${PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 65px; height: auto;"/>
+                            <img src="${PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 70px; height: auto;"/>
                         </td>
                         <td style="width: 50%; text-align: center; padding: 10px; vertical-align: middle;">
                             <strong style="font-size: 12pt; line-height: 1.2;">COMANDO DA AERONÁUTICA<br/>PARQUE DE MATERIAL AERONÁUTICO<br/>DE LAGOA SANTA</strong>
@@ -75,304 +65,246 @@ function getDocumentHtml(data: NpaData): string {
                         <td style="width: 25%; text-align: center; padding: 0; border-left: 2px solid black; vertical-align: top;">
                            <table style="width: 100%; border-collapse: collapse;">
                                 <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>Nº DO DOCUMENTO</strong><br/><span style="font-size: 10pt;">${data.numero || ''}</span></td>
+                                    <td style="padding: 5px; text-align: center; font-size: 9pt;"><strong>Nº DO DOCUMENTO</strong><br/><span style="font-size: 10pt;">${data.numero}</span></td>
                                 </tr>
                                 <tr style="border-bottom: 1px solid black;">
-                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>EXPEDIÇÃO</strong><br/><span style="font-size: 10pt;">${formatDate(data.dataExpedicao || '')}</span></td>
+                                    <td style="padding: 5px; text-align: center; font-size: 9pt;"><strong>EXPEDIÇÃO</strong><br/><span style="font-size: 10pt;">${formatDate(data.dataExpedicao)}</span></td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px; text-align: center; font-size: 8pt;"><strong>VALIDADE</strong><br/><span style="font-size: 10pt;">${data.validade || ''}</span></td>
+                                    <td style="padding: 5px; text-align: center; font-size: 9pt;"><strong>VALIDADE</strong><br/><span style="font-size: 10pt;">${data.validade}</span></td>
                                 </tr>
-                           </table>
+                            </table>
                         </td>
                     </tr>
-                    <tr>
+                     <tr>
                         <td style="padding: 8px; border-top: 2px solid black; text-align: center; font-size: 10pt;"><strong>ASSUNTO</strong></td>
-                        <td colspan="2" style="padding: 8px; border-top: 2px solid black; border-left: 2px solid black; font-weight: bold;">${(data.assunto || '').toUpperCase()}</td>
+                        <td colspan="2" style="padding: 8px; border-top: 2px solid black; border-left: 2px solid black;">${data.assunto}</td>
                     </tr>
                     <tr>
                         <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>ANEXOS</strong></td>
                         <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">
-                           ${data.anexos && Array.isArray(data.anexos) ? 
-                               data.anexos.map(a => `${a.letra || ''} - ${(a.titulo || '').toUpperCase()}`).join('<br/>') : 
-                               ''
-                           }
+                           ${data.anexos.map(a => `${a.letra} - ${a.titulo}`).join('<br/>')}
                         </td>
                     </tr>
                     <tr>
                         <td style="padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>DISTRIBUIÇÃO</strong></td>
-                        <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">${data.distribuicao || ''}</td>
+                        <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">${data.distribuicao}</td>
                     </tr>
                 </table>
-                <div style="margin-top: 3cm;">
-                    <h2 style="text-align: center; font-size: 14pt; text-transform: uppercase; font-weight: bold; margin-bottom: 20px;">SUMÁRIO</h2>
+                <div style="margin-top: 4cm;">
+                    <h2 style="text-align: center; font-size: 14pt; text-transform: uppercase; font-weight: bold; margin-bottom: 10px;">SUMÁRIO</h2>
                     ${generateSummary()}
                 </div>
             </div>
 
-            <!-- CORPO DO TEXTO -->
-            <div class="page-content-container">
-                 ${data.body && Array.isArray(data.body) ? data.body.map(section => `
-                    <div style="margin-bottom: 1cm;">
-                        <!-- SEÇÃO TÍTULO -->
-                        <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero || ''} ${section.titulo || ''}</p>
-                        <!-- LINHA EM BRANCO OBRIGATÓRIA -->
-                        <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
-                        
-                        ${section.subsections && Array.isArray(section.subsections) ? section.subsections.map(subsection => `
-                            <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
-                                <!-- SUBTÍTULO -->
-                                <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero || ''} ${subsection.titulo || ''}</strong></p>
-                                <!-- LINHA EM BRANCO OBRIGATÓRIA -->
-                                <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
-
-                                ${subsection.titulo && subsection.titulo.includes('PROPOSIÇÃO') ? 
-                                    `<div style="margin-top: 1cm;">
+            <!-- Content Pages -->
+            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always; position: relative;">
+                 ${data.body.map(section => `
+                    <div style="margin-bottom: 1.5em;">
+                        <p style="text-transform: uppercase; margin-bottom: 0.5em;"><strong>${section.numero} ${section.titulo}</strong></p>
+                        ${section.subsections.map(subsection => `
+                            <div style="margin-top: 0.8em;">
+                                <p style="text-transform: uppercase; margin-bottom: 0.3em;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
+                                ${subsection.titulo.includes('PROPOSIÇÃO') ? 
+                                    `<div style="margin-top: 2cm;">
                                         <table style="width: 100%; border-collapse: collapse;">
                                             <tr>
-                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 1.5cm;">Proposto por:</td>
-                                                <td style="width: 67%; text-align: center; padding-bottom: 1.5cm;">
+                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 2cm;">Proposto por:</td>
+                                                <td style="width: 67%; text-align: center; padding-bottom: 2cm;">
                                                     _____________________________________<br/>
-                                                    ${data.assinaturas?.propostoPor?.nome ? data.assinaturas.propostoPor.nome.toUpperCase() : ''}<br/>
-                                                    ${data.assinaturas?.propostoPor?.cargo || ''}
+                                                    ${data.assinaturas.propostoPor.nome}<br/>
+                                                    ${data.assinaturas.propostoPor.cargo}
                                                 </td>
                                             </tr>
                                              <tr>
-                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 1.5cm;">Visto por:</td>
-                                                <td style="width: 67%; text-align: center; padding-bottom: 1.5cm;">
+                                                <td style="width: 33%; text-align: left; vertical-align: top; padding-bottom: 2cm;">Visto por:</td>
+                                                <td style="width: 67%; text-align: center; padding-bottom: 2cm;">
                                                     _____________________________________<br/>
-                                                    ${data.assinaturas?.vistoPor?.nome ? data.assinaturas.vistoPor.nome.toUpperCase() : ''}<br/>
-                                                    ${data.assinaturas?.vistoPor?.cargo || ''}
+                                                    ${data.assinaturas.vistoPor.nome}<br/>
+                                                    ${data.assinaturas.vistoPor.cargo}
                                                 </td>
                                             </tr>
                                              <tr>
                                                 <td style="width: 33%; text-align: left; vertical-align: top;">Aprovado por:</td>
                                                 <td style="width: 67%; text-align: center;">
                                                     _____________________________________<br/>
-                                                    ${data.assinaturas?.aprovadoPor?.nome ? data.assinaturas.aprovadoPor.nome.toUpperCase() : ''}<br/>
-                                                    ${data.assinaturas?.aprovadoPor?.cargo || ''}
+                                                    ${data.assinaturas.aprovadoPor.nome}<br/>
+                                                    ${data.assinaturas.aprovadoPor.cargo}
                                                 </td>
                                             </tr>
                                         </table>
                                     </div>` 
                                 : 
-                                    `<p style="text-indent: 2.5cm; margin: 0; text-align: justify; line-height: 1.5;">${formatText(subsection.conteudo || '')}</p>`
+                                    `<p style="text-indent: 2.5cm; margin: 0; text-align: justify;">${formatText(subsection.conteudo)}</p>`
                                 }
                             </div>
-                        `).join('') : ''}
+                        `).join('')}
                     </div>
-                 `).join('') : ''}
+                `).join('')}
             </div>
 
-            <!-- REFERÊNCIAS -->
-             <div style="page-break-before: always; width: 100%; margin-top: 1cm;">
-                <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1cm; text-align: center;">REFERÊNCIAS</p>
-                <div style="text-align: justify; line-height: 1.4;">
-                    <p style="margin-bottom: 1em; text-indent: 2.5cm;">${formatText(data.referencias || '')}</p>
-                </div>
+            <!-- Referencias Page -->
+             <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+                <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1em;">REFERÊNCIAS</p>
+                <p style="text-indent: 2.5cm; text-align: justify;">${formatText(data.referencias)}</p>
              </div>
 
-            <!-- ANEXO A -->
-            ${data.anexoA && Array.isArray(data.anexoA) && data.anexoA.length > 0 ? `
-            <div style="page-break-before: always; width: 100%; margin-top: 1cm;">
-                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo A - Tabela de Efetivo Proposto</p>
-                <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1px solid black;">
+            <!-- Anexo A -->
+            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5em;">Anexo A - Tabela de Efetivo Proposto</p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
                     <thead>
-                        <tr style="background-color: #e5e7eb;">
-                            <th style="border: 1px solid black; padding: 5px;" rowspan="2">Função</th>
-                            <th style="border: 1px solid black; padding: 5px;" colspan="3">Previsão Principal</th>
-                            <th style="border: 1px solid black; padding: 5px;" colspan="3">Previsão Alternativa</th>
-                            <th style="border: 1px solid black; padding: 5px;" rowspan="2">Efetivo Proposto</th>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid black; padding: 4px;" rowspan="2">Função</th>
+                            <th style="border: 1px solid black; padding: 4px;" colspan="3">Previsão Principal</th>
+                            <th style="border: 1px solid black; padding: 4px;" colspan="3">Previsão Alternativa</th>
+                            <th style="border: 1px solid black; padding: 4px;" rowspan="2">Efetivo Proposto</th>
                         </tr>
-                        <tr style="background-color: #f3f4f6;">
-                            <th style="border: 1px solid black; padding: 3px;">Posto/Grad</th>
-                            <th style="border: 1px solid black; padding: 3px;">Quadro</th>
-                            <th style="border: 1px solid black; padding: 3px;">Espec.</th>
-                            <th style="border: 1px solid black; padding: 3px;">Posto/Grad</th>
-                            <th style="border: 1px solid black; padding: 3px;">Quadro</th>
-                            <th style="border: 1px solid black; padding: 3px;">Espec.</th>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid black; padding: 4px;">Posto/Grad</th>
+                            <th style="border: 1px solid black; padding: 4px;">Quadro</th>
+                            <th style="border: 1px solid black; padding: 4px;">Espec.</th>
+                            <th style="border: 1px solid black; padding: 4px;">Posto/Grad</th>
+                            <th style="border: 1px solid black; padding: 4px;">Quadro</th>
+                            <th style="border: 1px solid black; padding: 4px;">Espec.</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${data.anexoA.map(row => `
                             <tr>
-                                <td style="border: 1px solid black; padding: 4px;">${row.funcao || ''}</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal?.postoGrad || ''}</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal?.quadro || ''}</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal?.especialidade || ''}</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa?.postoGrad || ''}</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa?.quadro || ''}</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa?.especialidade || ''}</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.efetivoProposto || 0}</td>
+                                <td style="border: 1px solid black; padding: 4px;">${row.funcao}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.postoGrad}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.quadro}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.especialidade}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.postoGrad}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.quadro}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.especialidade}</td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.efetivoProposto}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                     <tfoot>
-                        <tr style="font-weight: bold; background-color: #f9fafb;">
-                            <td colspan="7" style="border: 1px solid black; padding: 5px; text-align: right;">TOTAL</td>
-                            <td style="border: 1px solid black; padding: 5px; text-align: center;">${totalEfetivoA}</td>
+                        <tr>
+                            <td colspan="7" style="border: 1px solid black; padding: 5px; text-align: right; font-weight: bold;">TOTAL</td>
+                            <td style="border: 1px solid black; padding: 5px; text-align: center; font-weight: bold;">${totalEfetivoA}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-            ` : ''}
 
-            <!-- ANEXO B -->
-            ${data.anexoB && Array.isArray(data.anexoB) && data.anexoB.length > 0 ? `
-            <div style="page-break-before: always; width: 100%; margin-top: 1cm;">
-                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo B - Matriz de Qualificação</p>
-                <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
+            <!-- Anexo B -->
+            <div class="page" style="width: 210mm; min-height: 297mm; padding: 30mm 20mm 20mm 30mm; box-sizing: border-box; page-break-after: always;">
+                <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5em;">Anexo B - Matriz de Qualificação</p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 10pt; border: 1px solid black;">
                     <thead>
-                        <tr style="background-color: #e5e7eb;">
-                            <th style="border: 1px solid black; padding: 6px;">Qualificação Desejável</th>
-                            <th style="border: 1px solid black; padding: 6px;">Sigla</th>
-                            <th style="border: 1px solid black; padding: 6px;">Legislação</th>
-                            <th style="border: 1px solid black; padding: 6px;">Prioridade</th>
-                            <th style="border: 1px solid black; padding: 6px;">CH</th>
-                            <th style="border: 1px solid black; padding: 6px;">ENC</th>
-                            <th style="border: 1px solid black; padding: 6px;">AUX</th>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Qualificação Desejável</th>
+                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Sigla</th>
+                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Legislação</th>
+                            <th style="border: 1px solid black; padding: 5px; text-align: center;">Prioridade</th>
+                            <th style="border: 1px solid black; padding: 5px; text-align: center;">SETOR-CH</th>
+                            <th style="border: 1px solid black; padding: 5px; text-align: center;">SETOR-ENC</th>
+                            <th style="border: 1px solid black; padding: 5px; text-align: center;">SETOR-AUX</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${data.anexoB.map(row => `
                             <tr>
-                                <td style="border: 1px solid black; padding: 5px;">${row.qualificacao || ''}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.sigla || ''}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.legislacao || ''}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.prioridade || ''}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorCh || ''}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorEnc || ''}</td>
-                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorAux || ''}</td>
+                                <td style="border: 1px solid black; padding: 5px;">${row.qualificacao}</td>
+                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.sigla}</td>
+                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.legislacao}</td>
+                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.prioridade}</td>
+                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorCh}</td>
+                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorEnc}</td>
+                                <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorAux}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
-                <p style="font-size: 8pt; margin-top: 10px;"><strong>LEGENDA:</strong> 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
+                <br/>
+                <div style="border-top: 1px solid black; padding-top: 10px;">
+                    <p style="font-size: 9pt;"><strong>LEGENDA:</strong> COLUNAS DOS CARGOS: 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
+                </div>
             </div>
-            ` : ''}
         </div>
     `;
 }
 
 export const exportToDocx = async (data: NpaData): Promise<void> => {
-    try {
-        // Verificar se a biblioteca htmlToDocx está disponível
-        const htmlToDocx = (window as any).htmlToDocx;
-        if (!htmlToDocx) {
-            console.error('Erro: Biblioteca htmlToDocx não carregada.');
-            alert('Erro: Biblioteca para gerar DOCX não está disponível. Verifique se todas as dependências foram carregadas.');
-            return;
-        }
-
-        const headerHtml = `<div style="width: 100%; font-family: 'Times New Roman'; font-size: 11pt;">
-            <table style="width: 100%;"><tr>
-                <td style="text-align: left;">${data.numero || ''}</td>
-                <td style="text-align: right;">{PAGENUM}</td>
-            </tr></table>
-        </div>`;
-        
-        const content = getDocumentHtml(data);
-        
-        const fileBuffer = await htmlToDocx.asBlob(content, {
-            orientation: 'portrait',
-            margins: { top: 1417, bottom: 1134, left: 1700, right: 1134 },
-            header: { html: headerHtml, type: 'default' },
-        });
-
-        const url = URL.createObjectURL(fileBuffer);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `NPA_${(data.numero || 'documento').replace(/[\/\s]/g, '_')}.docx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error('Erro ao gerar DOCX:', error);
-        alert('Ocorreu um erro ao gerar o documento DOCX. Verifique o console para mais detalhes.');
+    const htmlToDocx = (window as any).htmlToDocx;
+    if (!htmlToDocx) {
+        alert('Erro: Biblioteca DOCX não carregada.');
+        return;
     }
+
+    const headerHtml = `<div style="width: 100%; font-family: 'Times New Roman'; font-size: 12pt;">
+        <table style="width: 100%;"><tr>
+            <td style="text-align: left;">${data.numero}</td>
+            <td style="text-align: right;">{PAGENUM}</td>
+        </tr></table>
+    </div>`;
+    
+    const content = getDocumentHtml(data);
+    const fileBuffer = await htmlToDocx.asBlob(content, {
+        orientation: 'portrait',
+        margins: { top: 1700, bottom: 1134, left: 1700, right: 1134 },
+        header: { html: headerHtml, type: 'default' },
+    });
+
+    const url = URL.createObjectURL(fileBuffer);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `NPA_${data.numero.replace(/[\/\s]/g, '_')}.docx`;
+    link.click();
+    URL.revokeObjectURL(url);
 };
 
 export const exportToPdf = async (data: NpaData): Promise<void> => {
-    try {
-        const { jsPDF } = (window as any).jspdf;
-        
-        if (!jsPDF) {
-            console.error('Erro: Biblioteca jsPDF não carregada.');
-            alert('Erro: Biblioteca para gerar PDF não está disponível. Verifique se todas as dependências foram carregadas.');
-            return;
-        }
+    const { jsPDF } = (window as any).jspdf;
+    
+    const previewContainer = document.getElementById('document-preview-container');
+    if (!previewContainer) return;
 
-        const previewContainer = document.getElementById('document-preview-container');
-        if (!previewContainer) {
-            console.error('Erro: Container de pré-visualização não encontrado.');
-            return;
-        }
+    previewContainer.innerHTML = getDocumentHtml(data);
+    const element = previewContainer.querySelector('#documentRoot') as HTMLElement;
 
-        previewContainer.innerHTML = getDocumentHtml(data);
-        const element = previewContainer.querySelector('#documentRoot') as HTMLElement;
+    const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+        putOnlyUsedFonts: true,
+        floatPrecision: 16
+    });
 
-        if (!element) {
-            console.error('Erro: Elemento raiz do documento não encontrado.');
-            return;
-        }
+    // Use built-in 'times' font which maps to Times New Roman
+    doc.setFont('times', 'normal');
 
-        const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4',
-            compress: true,
-            putOnlyUsedFonts: true
-        });
-
-        doc.setFont('times', 'normal');
-
-        await doc.html(element, {
-            callback: function (doc: any) {
-                try {
-                    const totalPages = doc.internal.getNumberOfPages();
-                    
-                    for (let i = 2; i <= totalPages; i++) {
-                        doc.setPage(i);
-                        doc.setFontSize(10);
-                        doc.setTextColor(0, 0, 0);
-                        
-                        const pageWidth = doc.internal.pageSize.getWidth();
-                        const pageNum = i.toString();
-                        const pageNumWidth = doc.getTextWidth(pageNum);
-                        
-                        doc.text(data.numero || '', 30, 15);
-                        doc.text(pageNum, pageWidth - pageNumWidth - 20, 15);
-                    }
-                    
-                    doc.save(`NPA_${(data.numero || 'documento').replace(/[\/\s]/g, '_')}.pdf`);
-                    previewContainer.innerHTML = '';
-                } catch (error) {
-                    console.error('Erro no callback do PDF:', error);
-                    alert('Ocorreu um erro ao finalizar o PDF.');
-                }
-            },
-            x: 30,
-            y: 25,
-            width: 160,
-            windowWidth: 800,
-            autoPaging: 'text',
-            margin: [25, 20, 20, 30],
-            html2canvas: {
-                scale: 1,
-                logging: false,
-                useCORS: true,
-                letterRendering: true
+    await doc.html(element, {
+        callback: function (doc: any) {
+            const totalPages = doc.internal.getNumberOfPages();
+            
+            // Add headers for subsequent pages
+            for (let i = 2; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(11);
+                doc.setFont('times', 'normal');
+                
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageNum = i.toString();
+                const pageNumWidth = doc.getTextWidth(pageNum);
+                
+                doc.text(data.numero, 30, 15); // NPA Number at top-left
+                doc.text(pageNum, pageWidth - pageNumWidth - 20, 15); // Page Number at top-right
             }
-        });
-    } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
-        alert('Ocorreu um erro ao gerar o documento PDF. Verifique o console para mais detalhes.');
-    }
-};
-
-// Exportações obrigatórias para resolver o erro no Vercel
-export default {
-    exportToDocx,
-    exportToPdf
+            
+            doc.save(`NPA_${data.numero.replace(/[\/\s]/g, '_')}.pdf`);
+            previewContainer.innerHTML = '';
+        },
+        x: 0,
+        y: 0,
+        width: 210, // Target width in mm (A4)
+        windowWidth: 794, // Standard 21cm width in px at 96 DPI
+        autoPaging: 'text',
+        margin: [0, 0, 0, 0], // Margins are already in the HTML page styles
+    });
 };
