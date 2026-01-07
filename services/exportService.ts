@@ -35,7 +35,7 @@ function getDocumentHtml(data: NpaData): string {
         <div id="documentRoot" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: black; line-height: 1.5; text-align: justify;">
             
             <!-- Page 1: Cover Page -->
-            <div class="page" style="width: 21cm; height: 29.7cm; padding: 2cm; box-sizing: border-box; page-break-after: always;">
+            <div class="page" style="width: 21cm; height: 29.7cm; padding: 2cm; box-sizing: border-box; page-break-after: always; background-color: white;">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
                         <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
@@ -74,7 +74,7 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- Content Pages -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always;">
+            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1.5em;">
                         <p style="font-weight: bold; text-transform: uppercase;">${section.numero} ${section.titulo}</p>
@@ -120,14 +120,14 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- Referencias Page -->
-             <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always;">
+             <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
                 <p style="font-weight: bold; text-transform: uppercase;">REFERÊNCIAS</p>
                 <p>${formatText(data.referencias)}</p>
              </div>
 
             <!-- Anexos Pages -->
             <!-- Anexo A -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always;">
+            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
                 <p style="text-align: center; font-weight: bold;">Anexo A - Tabela de Efetivo Proposto</p>
                 <br/>
                 <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid black;">
@@ -159,7 +159,7 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- Anexo B -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always;">
+            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
                 <p style="text-align: center; font-weight: bold;">Anexo B - Matriz de Qualificação</p>
                 <br/>
                 <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid black;">
@@ -193,7 +193,7 @@ function getDocumentHtml(data: NpaData): string {
             </div>
 
             <!-- Anexo C -->
-            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box;">
+            <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; background-color: white;">
                 <p style="text-align: center; font-weight: bold;">Anexo C - Fluxograma Bizagi</p>
                 <br/><br/>
                 <div style="width: 100%; height: 20cm; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center;">
@@ -250,79 +250,88 @@ export const exportToDocx = async (data: NpaData): Promise<void> => {
 };
 
 
-export const exportToPdf = (data: NpaData): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        const jspdf = (window as any).jspdf;
-        if (!jspdf) {
-            const errorMsg = 'Erro: A biblioteca de exportação para PDF (jspdf) não foi carregada.';
-            console.error(errorMsg);
-            alert(errorMsg);
-            return reject(new Error('jspdf not loaded'));
-        }
+export const exportToPdf = async (data: NpaData): Promise<void> => {
+    const jspdf = (window as any).jspdf;
+    const html2canvas = (window as any).html2canvas;
 
-        const previewContainer = document.getElementById('document-preview-container');
-        if (!previewContainer) {
-            const errorMsg = 'Container de preview do documento não encontrado.';
-            console.error(errorMsg);
-            return reject(new Error(errorMsg));
-        }
+    if (!jspdf || !html2canvas) {
+        const errorMsg = 'Erro: Bibliotecas de exportação (jspdf, html2canvas) não foram carregadas.';
+        console.error(errorMsg);
+        alert(errorMsg);
+        throw new Error('PDF export libraries not loaded');
+    }
 
-        previewContainer.innerHTML = getDocumentHtml(data);
-        const documentRoot = previewContainer.querySelector<HTMLElement>('#documentRoot');
-        if (!documentRoot) {
-            const errorMsg = 'Elemento raiz do documento para exportação não encontrado.';
-            console.error(errorMsg);
-            return reject(new Error(errorMsg));
-        }
+    const previewContainer = document.getElementById('document-preview-container');
+    if (!previewContainer) {
+        const errorMsg = 'Container de preview do documento não encontrado.';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+    }
 
+    previewContainer.innerHTML = getDocumentHtml(data);
+    const documentRoot = previewContainer.querySelector<HTMLElement>('#documentRoot');
+    if (!documentRoot) {
+        const errorMsg = 'Elemento raiz do documento para exportação não encontrado.';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+    }
+    
+    try {
         const { jsPDF } = jspdf;
         const doc = new jsPDF({
             orientation: 'p',
             unit: 'mm',
             format: 'a4',
         });
-        
-        doc.html(documentRoot, {
-            callback: (doc: any) => {
-                const totalPages = doc.internal.getNumberOfPages();
-                const pdfWidth = doc.internal.pageSize.getWidth();
-                const headerText = data.numero;
 
-                const leftMargin = 30; // 3cm
-                const rightMargin = 20; // 2cm
-                const headerY = 15; // 1.5cm from top
+        const pages = Array.from(documentRoot.querySelectorAll<HTMLElement>('.page'));
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = doc.internal.pageSize.getHeight();
 
-                for (let i = 2; i <= totalPages; i++) {
-                    doc.setPage(i);
-                    doc.setFontSize(12);
-                    doc.setFont('Times-Roman', 'normal');
-                    
-                    const pageNumText = `${i}`;
-                    const pageNumWidth = doc.getTextWidth(pageNumText);
-                    
-                    doc.text(headerText, leftMargin, headerY);
-                    doc.text(pageNumText, pdfWidth - pageNumWidth - rightMargin, headerY);
-                }
-                
-                doc.save(`NPA_${data.numero.replace(/[\/\s]/g, '_') || 'documento'}.pdf`);
-                previewContainer.innerHTML = ''; // Clean up
-                resolve();
-            },
-            margin: [0, 0, 0, 0], // Margins are handled by the HTML padding
-            autoPaging: 'slice', // Respects the CSS page-break-after property
-            x: 0,
-            y: 0,
-            width: 210, // A4 width in mm
-            windowWidth: documentRoot.scrollWidth,
-            html2canvas: {
-                scale: 2,
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            const canvas = await html2canvas(page, {
+                scale: 2, // Higher scale for better quality
                 useCORS: true,
-            },
-        }).catch((err: any) => {
-            console.error("Erro durante a geração do PDF com jsPDF.html:", err);
-            alert("Ocorreu um erro inesperado ao gerar o PDF.");
-            previewContainer.innerHTML = '';
-            reject(err);
-        });
-    });
+            });
+
+            // Use JPEG for smaller file sizes
+            const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+            if (i > 0) {
+                doc.addPage();
+            }
+            
+            doc.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        }
+        
+        // Add headers to all pages except the first one
+        const totalPages = doc.internal.getNumberOfPages();
+        const headerText = data.numero;
+        const leftMargin = 30; // 3cm
+        const rightMargin = 20; // 2cm
+        const headerY = 15; // 1.5cm from top
+        
+        for (let i = 2; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(12);
+            doc.setFont('Times-Roman', 'normal');
+            
+            const pageNumText = `${i}`;
+            const pageNumWidth = doc.getTextWidth(pageNumText);
+            
+            // Set text color to black for headers
+            doc.setTextColor(0, 0, 0);
+            doc.text(headerText, leftMargin, headerY);
+            doc.text(pageNumText, pdfWidth - pageNumWidth - rightMargin, headerY);
+        }
+
+        doc.save(`NPA_${data.numero.replace(/[\/\s]/g, '_') || 'documento'}.pdf`);
+    } catch (err) {
+        console.error("Erro durante a geração do PDF:", err);
+        alert("Ocorreu um erro inesperado ao gerar o PDF.");
+        throw err; // Re-throw to be caught by the handler in App.tsx
+    } finally {
+        previewContainer.innerHTML = ''; // Clean up
+    }
 };
