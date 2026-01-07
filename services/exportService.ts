@@ -1,3 +1,4 @@
+
 import { NpaData } from '../types';
 import { PAMA_LS_LOGO_B64 } from '../assets/logo';
 
@@ -13,22 +14,11 @@ function formatDate(dateString: string): string {
     return `${day} ${month} ${year}`;
 }
 
-/**
- * Converte quebras de linha em <br/> se o conteúdo não for HTML puro, 
- * mas agora que usamos MilitaryEditor, o conteúdo já virá como HTML.
- */
 function formatContent(text: string): string {
     if (!text) return '';
-    // Se por acaso vier texto puro com \n, convertemos para br.
-    if (!text.includes('<') && text.includes('\n')) {
-        return text.replace(/\n/g, '<br/>');
-    }
     return text;
 }
 
-/**
- * Gera o HTML central do documento.
- */
 function getDocumentHtml(data: NpaData): string {
     const generateSummary = () => {
         let summaryHtml = '<div style="width: 100%; margin-top: 20px;">';
@@ -65,7 +55,6 @@ function getDocumentHtml(data: NpaData): string {
     const grayBg = "background-color: #D9D9D9;";
 
     return `
-            <!-- CAPA (PAGE 1) -->
             <div class="page-container" id="page-1">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black; font-family: 'Times New Roman';">
                     <tr>
@@ -123,7 +112,6 @@ function getDocumentHtml(data: NpaData): string {
 
             <div class="page-break"></div>
 
-            <!-- CORPO DO TEXTO -->
             <div class="page-container" id="page-content" style="font-family: 'Times New Roman';">
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1cm;">
@@ -195,7 +183,6 @@ function getDocumentHtml(data: NpaData): string {
 
             <div class="page-break"></div>
 
-            <!-- REFERÊNCIAS -->
              <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
                 <div style="text-align: justify; line-height: 1.4;">
@@ -207,7 +194,6 @@ function getDocumentHtml(data: NpaData): string {
 
             <div class="page-break"></div>
 
-            <!-- ANEXO A -->
             <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
                 <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo A - Tabela de Efetivo Proposto</p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1px solid black;">
@@ -252,7 +238,6 @@ function getDocumentHtml(data: NpaData): string {
 
             <div class="page-break"></div>
 
-            <!-- ANEXO B -->
             <div class="page-container" style="margin-top: 1cm; font-family: 'Times New Roman';">
                 <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 1.5cm;">Anexo B - Matriz de Qualificação</p>
                 <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
@@ -382,6 +367,11 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 p { margin: 0; font-family: 'Times New Roman'; }
                 table { width: 100%; border-collapse: collapse; font-family: 'Times New Roman'; }
                 img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+                
+                /* Estilos para listas no PDF */
+                ul { list-style-type: disc; margin-left: 1.5cm; }
+                ol { list-style-type: decimal; margin-left: 1.5cm; }
+                li { padding-left: 5px; }
             </style>
         </head>
         <body>

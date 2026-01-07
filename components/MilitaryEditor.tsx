@@ -8,14 +8,13 @@ interface MilitaryEditorProps {
     minHeight?: string;
 }
 
-const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeholder, minHeight = "150px" }) => {
+const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeholder, minHeight = "200px" }) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const [bgColor, setBgColor] = useState('#ffffff');
 
-    // Sincroniza valor externo com o editor se necessário
     useEffect(() => {
         if (editorRef.current && editorRef.current.innerHTML !== value) {
-            editorRef.current.innerHTML = value;
+            editorRef.current.innerHTML = value || '';
         }
     }, []);
 
@@ -25,7 +24,7 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
         }
     };
 
-    const execCommand = (command: string, val: string = '') => {
+    const exec = (command: string, val: string = '') => {
         document.execCommand(command, false, val);
         handleInput();
     };
@@ -33,78 +32,132 @@ const MilitaryEditor: React.FC<MilitaryEditorProps> = ({ value, onChange, placeh
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Tab') {
             e.preventDefault();
-            // Insere o recuo militar de 2,5cm
             const tabHtml = '<span style="display: inline-block; width: 2.5cm;">&nbsp;</span>';
             document.execCommand('insertHTML', false, tabHtml);
         }
     };
 
-    const colors = [
-        { name: 'Branco', value: '#ffffff' },
-        { name: 'Creme', value: '#fffdf0' },
-        { name: 'Cinza Claro', value: '#f4f4f4' },
-        { name: 'Verde Militar', value: '#e8ede4' }
+    const handlePaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const html = e.clipboardData.getData('text/html');
+        const text = e.clipboardData.getData('text/plain');
+
+        if (html) {
+            // Limpeza básica de lixo do Word mantendo o essencial
+            let cleanHtml = html
+                .replace(/<style([\s\S]*?)<\/style>/gi, '')
+                .replace(/<script([\s\S]*?)<\/script>/gi, '')
+                .replace(/class="Mso[\s\S]*?"/gi, '')
+                .replace(/style="[\s\S]*?"/gi, (match) => {
+                    // Preserva apenas negrito, itálico e underline se estiverem no style inline
+                    const kept = [];
+                    if (match.includes('font-weight:bold') || match.includes('font-weight: 700')) kept.push('font-weight:bold');
+                    if (match.includes('font-style:italic')) kept.push('font-style:italic');
+                    if (match.includes('text-decoration:underline')) kept.push('text-decoration:underline');
+                    return kept.length > 0 ? `style="${kept.join(';')}"` : '';
+                })
+                .replace(/<(?!b|i|u|p|br|ul|ol|li|span|strong|em|h1|h2|h3|div)[^>]+>/gi, '');
+
+            document.execCommand('insertHTML', false, cleanHtml || text.replace(/\n/g, '<br>'));
+        } else {
+            document.execCommand('insertHTML', false, text.replace(/\n/g, '<br>'));
+        }
+        handleInput();
+    };
+
+    const actions = [
+        { icon: '<b>B</b>', title: 'Negrito', cmd: () => exec('bold') },
+        { icon: '<i>I</i>', title: 'Itálico', cmd: () => exec('italic') },
+        { icon: '<u>U</u>', title: 'Sublinhado', cmd: () => exec('underline') },
+        { icon: '<s>S</s>', title: 'Tachado', cmd: () => exec('strikeThrough') },
+        { icon: 'H1', title: 'Título 1', cmd: () => exec('formatBlock', '<h1>') },
+        { icon: 'H2', title: 'Título 2', cmd: () => exec('formatBlock', '<h2>') },
+        { icon: '•', title: 'Lista', cmd: () => exec('insertUnorderedList') },
+        { icon: '1.', title: 'Lista Num.', cmd: () => exec('insertOrderedList') },
+        { icon: '⇥', title: 'Recuo 2.5cm', cmd: () => exec('insertHTML', '<span style="display: inline-block; width: 2.5cm;">&nbsp;</span>') },
+        { icon: '⌫', title: 'Limpar', cmd: () => exec('removeFormat') },
+    ];
+
+    const bgOptions = [
+        { color: '#ffffff', label: 'W' },
+        { color: '#fffdf0', label: 'C' },
+        { color: '#f4f4f4', label: 'G' },
+        { color: '#e8ede4', label: 'M' },
     ];
 
     return (
-        <div className="flex flex-col border border-gray-600 rounded-md overflow-hidden bg-gray-800">
-            {/* Toolbar */}
-            <div className="bg-gray-700 p-2 flex items-center justify-between border-b border-gray-600 select-none">
-                <div className="flex items-center space-x-1">
-                    <button 
-                        onClick={() => execCommand('bold')}
-                        className="w-8 h-8 flex items-center justify-center bg-gray-600 hover:bg-gray-500 rounded font-bold text-white transition-colors"
-                        title="Negrito (Ctrl+B)"
-                    >B</button>
-                    <button 
-                        onClick={() => execCommand('italic')}
-                        className="w-8 h-8 flex items-center justify-center bg-gray-600 hover:bg-gray-500 rounded italic text-white transition-colors"
-                        title="Itálico (Ctrl+I)"
-                    >I</button>
-                    <div className="h-6 w-px bg-gray-500 mx-2"></div>
-                    <span className="text-[10px] text-gray-400 mr-2 uppercase">Fundo:</span>
-                    <div className="flex space-x-1">
-                        {colors.map(c => (
-                            <button
-                                key={c.value}
-                                onClick={() => setBgColor(c.value)}
-                                className={`w-5 h-5 rounded-full border ${bgColor === c.value ? 'border-cyan-400 ring-1 ring-cyan-400' : 'border-gray-500'}`}
-                                style={{ backgroundColor: c.value }}
-                                title={c.name}
-                            />
-                        ))}
-                    </div>
+        <div className="pell-container flex flex-col border border-gray-400 rounded-sm overflow-hidden shadow-sm">
+            {/* Action Bar (Pell Style) */}
+            <div className="pell-actionbar bg-white border-b border-gray-300 flex flex-wrap p-1 gap-1 select-none">
+                {actions.map((act, i) => (
+                    <button
+                        key={i}
+                        type="button"
+                        onClick={act.cmd}
+                        className="pell-button w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-800 border border-transparent hover:border-gray-300 rounded-sm transition-all"
+                        title={act.title}
+                        dangerouslySetInnerHTML={{ __html: act.icon }}
+                    />
+                ))}
+                
+                <div className="flex-grow"></div>
+
+                <div className="flex items-center space-x-1 px-2 border-l border-gray-200">
+                    {bgOptions.map((opt) => (
+                        <button
+                            key={opt.color}
+                            type="button"
+                            onClick={() => setBgColor(opt.color)}
+                            className={`w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center text-[10px] font-bold ${bgColor === opt.color ? 'ring-2 ring-cyan-500' : ''}`}
+                            style={{ backgroundColor: opt.color, color: '#333' }}
+                            title={`Fundo: ${opt.label}`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
                 </div>
-                <div className="text-[9px] text-gray-500 font-mono">TAB = 2.5cm</div>
             </div>
 
-            {/* Editable Area */}
+            {/* Content Area */}
             <div
                 ref={editorRef}
                 contentEditable
                 onInput={handleInput}
                 onKeyDown={handleKeyDown}
-                className="p-4 focus:outline-none overflow-y-auto text-black"
+                onPaste={handlePaste}
+                className="pell-content p-6 focus:outline-none overflow-y-auto"
                 style={{ 
                     backgroundColor: bgColor, 
                     minHeight: minHeight,
+                    color: '#000',
                     fontFamily: '"Times New Roman", Times, serif',
                     fontSize: '12pt',
-                    lineHeight: '1.5'
+                    lineHeight: '1.5',
+                    textAlign: 'justify'
                 }}
             />
-            
-            {editorRef.current?.innerHTML === '' && (
-                <div className="absolute p-4 text-gray-400 pointer-events-none italic text-sm">
-                    {placeholder}
-                </div>
-            )}
 
             <style>{`
+                .pell-content h1 { font-size: 1.5em; font-weight: bold; margin: 10px 0; }
+                .pell-content h2 { font-size: 1.3em; font-weight: bold; margin: 8px 0; }
+                .pell-content ul { list-style-type: disc; margin-left: 20px; }
+                .pell-content ol { list-style-type: decimal; margin-left: 20px; }
+                .pell-content b, .pell-content strong { font-weight: bold; }
+                .pell-content i, .pell-content em { font-style: italic; }
+                .pell-content u { text-decoration: underline; }
+                
+                .pell-button {
+                    font-family: inherit;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
+                
+                /* Placeholder effect */
                 [contenteditable]:empty:before {
-                    content: attr(placeholder);
-                    color: #9ca3af;
+                    content: "${placeholder || 'Inicie o texto militar...'}";
+                    color: #999;
                     font-style: italic;
+                    pointer-events: none;
                 }
             `}</style>
         </div>
