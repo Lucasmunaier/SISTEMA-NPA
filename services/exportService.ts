@@ -24,9 +24,9 @@ function getDocumentHtml(data: NpaData): string {
         const createSummaryRow = (text: string, isSub: boolean) => {
             const style = isSub ? 'padding-left: 2.5cm;' : 'font-weight: bold;';
             return `
-                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.5; ${style}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; line-height: 1.5; ${style}">
                     <span style="white-space: nowrap; padding-right: 8px;">${text}</span>
-                    <span style="width: 100%; border-bottom: 1px dotted black; margin-bottom: 4px;"></span>
+                    <span style="width: 100%; border-bottom: 1px dotted black; margin-bottom: 0.3em; flex-grow: 1;"></span>
                     <span style="white-space: nowrap; padding-left: 8px;">...</span>
                 </div>
             `;
@@ -51,7 +51,7 @@ function getDocumentHtml(data: NpaData): string {
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
                         <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
-                            <img src="${PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="width: 80px; height: auto;"/>
+                            <img src="${PAMA_LS_LOGO_B64}" alt="PAMA LS Logo" style="display: block; margin: 0 auto; max-width: 80px; height: auto;"/>
                         </td>
                         <td style="width: 50%; text-align: center; padding: 10px; vertical-align: middle;">
                             <strong style="font-size: 13pt;">COMANDO DA AERONÁUTICA<br/>PARQUE DE MATERIAL AERONÁUTICO<br/>DE LAGOA SANTA</strong>
@@ -220,7 +220,7 @@ export const exportToDocx = async (data: NpaData): Promise<void> => {
     const htmlToDocx = (window as any).htmlToDocx;
     if (!htmlToDocx) {
         console.error('html-to-docx-ts library is not loaded.');
-        alert('Erro: A biblioteca de exportação para DOCX não foi carregada.');
+        alert('Erro: A biblioteca de exportação (html-to-docx-ts) não foi carregada. Verifique sua conexão com a internet ou se algum bloqueador de scripts está ativo.');
         return;
     }
 
