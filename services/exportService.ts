@@ -16,7 +16,6 @@ function formatDate(dateString: string): string {
 
 /**
  * Gera o HTML central do documento.
- * Adiciona <p>&nbsp;</p> após títulos e subtítulos para conformidade militar.
  */
 function getDocumentHtml(data: NpaData): string {
     const formatText = (text: string) => {
@@ -29,14 +28,15 @@ function getDocumentHtml(data: NpaData): string {
         let pageCounter = 2; 
 
         const createSummaryRow = (text: string, pageNum: string, level: number) => {
-            // Alinhamento vertical único (sem recuo para a direita)
+            // Alinhamento vertical único conforme solicitado (mesma coluna)
+            const isSubsection = level === 1;
             const fontWeight = level === 0 ? 'bold' : 'normal';
-            const fontSize = level === 2 ? '10pt' : '11pt';
-            const paddingLeft = level === 2 ? '0.5cm' : '0'; // Pequeno recuo apenas para sub-itens de 3º nível para clareza, ou 0 para alinhamento total
+            const textTransform = isSubsection ? 'uppercase' : 'none';
+            const textDecoration = isSubsection ? 'underline' : 'none';
             
             return `
-                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: ${fontSize}; padding-left: ${paddingLeft}; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
-                    <span style="white-space: nowrap; padding-right: 5px;">${text.toUpperCase()}</span>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.2; font-size: 11pt; margin-bottom: 6px; ${fontWeight === 'bold' ? 'font-weight: bold;' : ''}">
+                    <span style="white-space: nowrap; padding-right: 5px; text-transform: ${textTransform}; text-decoration: ${textDecoration};">${text.toUpperCase()}</span>
                     <div style="flex-grow: 1; border-bottom: 1px dotted black; height: 0.9em; margin-bottom: 3px;"></div>
                     <span style="white-space: nowrap; padding-left: 10px; min-width: 25px; text-align: right;">${pageNum}</span>
                 </div>
@@ -47,12 +47,7 @@ function getDocumentHtml(data: NpaData): string {
             summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, 0);
             section.subsections.forEach(subsection => {
                  summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, `${pageCounter}`, 1);
-                 // Adiciona sub-subseções (indicativos de seção) no sumário
-                 if (subsection.subSubsections && subsection.subSubsections.length > 0) {
-                     subsection.subSubsections.forEach(sss => {
-                        summaryHtml += createSummaryRow(`${sss.numero} ${sss.titulo}`, `${pageCounter}`, 2);
-                     });
-                 }
+                 // Sub-subseções removidas do sumário conforme solicitado
             });
             pageCounter++;
         });
@@ -65,7 +60,7 @@ function getDocumentHtml(data: NpaData): string {
 
     return `
             <!-- CAPA (PAGE 1) -->
-            <div class="page-container">
+            <div class="page-container" id="page-1">
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
                     <tr>
                         <td style="width: 25%; text-align: center; padding: 10px; border-right: 2px solid black; vertical-align: middle;">
@@ -114,7 +109,7 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page-break"></div>
 
             <!-- CORPO DO TEXTO -->
-            <div class="page-container">
+            <div class="page-container" id="page-content">
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1cm;">
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
@@ -122,30 +117,31 @@ function getDocumentHtml(data: NpaData): string {
                         
                         ${section.subsections.map(subsection => `
                             <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
+                                <!-- Subseção em CAIXA ALTA e Sublinhada -->
                                 <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
                                 <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
 
                                 ${subsection.titulo.includes('PROPOSIÇÃO') ? 
                                     `<div style="margin-top: 1cm; text-align: center;">
-                                        <div style="margin-bottom: 2cm;">
+                                        <div style="margin-bottom: 2cm; text-align: center;">
                                             <p style="text-align: left; margin-bottom: 0.5cm;">Proposto por:</p>
-                                            <div style="display: inline-block; width: 350px;">
+                                            <div style="display: inline-block; width: 100%; text-align: center;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.propostoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.propostoPor.cargo}
                                             </div>
                                         </div>
-                                         <div style="margin-bottom: 2cm;">
+                                         <div style="margin-bottom: 2cm; text-align: center;">
                                             <p style="text-align: left; margin-bottom: 0.5cm;">Visto por:</p>
-                                            <div style="display: inline-block; width: 350px;">
+                                            <div style="display: inline-block; width: 100%; text-align: center;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.vistoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.vistoPor.cargo}
                                             </div>
                                         </div>
-                                         <div style="margin-bottom: 2cm;">
+                                         <div style="margin-bottom: 2cm; text-align: center;">
                                             <p style="text-align: left; margin-bottom: 0.5cm;">Aprovado por:</p>
-                                            <div style="display: inline-block; width: 350px;">
+                                            <div style="display: inline-block; width: 100%; text-align: center;">
                                                 _____________________________________<br/>
                                                 ${data.assinaturas.aprovadoPor.nome.toUpperCase()}<br/>
                                                 ${data.assinaturas.aprovadoPor.cargo}
@@ -182,7 +178,6 @@ function getDocumentHtml(data: NpaData): string {
              <div class="page-container" style="margin-top: 1cm;">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
                 <div style="text-align: justify; line-height: 1.4;">
-                    <!-- Removido recuo conforme solicitado -->
                     <div style="text-indent: 0; padding: 0; margin: 0;">
                         ${formatText(data.referencias)}
                     </div>
@@ -339,11 +334,19 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 .page-break { 
                     page-break-after: always; 
                 }
-                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
-                p { margin: 0; }
-                strong { font-weight: bold; }
-                table { width: 100%; border-collapse: collapse; }
-                
+
+                /* Lógica de Cabeçalho Espelhado */
+                .mirror-header {
+                    position: absolute;
+                    top: 15mm;
+                    left: 30mm;
+                    right: 20mm;
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 11pt;
+                    font-weight: bold;
+                }
+
                 @media print {
                     body { background: transparent; }
                     .page-container { 
@@ -351,8 +354,14 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                         box-shadow: none; 
                         width: 100%; 
                         padding: 30mm 20mm 20mm 30mm;
+                        overflow: hidden;
                     }
+                    /* Oculta os cabeçalhos em tela, mas aparecem na impressão via injeção JS abaixo */
                 }
+                
+                h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
+                p { margin: 0; }
+                table { width: 100%; border-collapse: collapse; }
             </style>
         </head>
         <body>
@@ -361,9 +370,39 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
             </div>
             <script>
                 window.onload = () => {
+                    const pages = document.querySelectorAll('.page-container');
+                    const totalPages = pages.length;
+                    const docNum = "${data.numero}";
+
+                    pages.forEach((page, index) => {
+                        const pageNum = index + 1;
+                        if (pageNum > 1) { // Cabeçalho espelhado começa após a capa
+                            const headerDiv = document.createElement('div');
+                            headerDiv.className = 'mirror-header';
+                            
+                            const leftSpan = document.createElement('span');
+                            const rightSpan = document.createElement('span');
+                            
+                            // Espelhamento: 
+                            // Páginas Pares (2, 4, 6...): DocNum (Esquerda) | Page (Direita)
+                            // Páginas Ímpares (3, 5, 7...): Page (Esquerda) | DocNum (Direita)
+                            if (pageNum % 2 === 0) {
+                                leftSpan.innerText = docNum;
+                                rightSpan.innerText = pageNum + " / " + totalPages;
+                            } else {
+                                leftSpan.innerText = pageNum + " / " + totalPages;
+                                rightSpan.innerText = docNum;
+                            }
+                            
+                            headerDiv.appendChild(leftSpan);
+                            headerDiv.appendChild(rightSpan);
+                            page.prepend(headerDiv);
+                        }
+                    });
+
                     setTimeout(() => {
                         window.print();
-                    }, 500);
+                    }, 800);
                 };
             </script>
         </body>
