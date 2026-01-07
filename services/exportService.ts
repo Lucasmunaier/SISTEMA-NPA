@@ -19,15 +19,27 @@ function getDocumentHtml(data: NpaData): string {
     const formatText = (text: string) => text.replace(/\n/g, '<br/>');
 
     const generateSummary = () => {
-        let summaryHtml = '<table style="width: 100%; border-collapse: collapse;">';
+        let summaryHtml = '<div style="width: 100%;">';
+
+        const createSummaryRow = (text: string, isSub: boolean) => {
+            const style = isSub ? 'padding-left: 2.5cm;' : 'font-weight: bold;';
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: baseline; line-height: 1.5; ${style}">
+                    <span style="white-space: nowrap; padding-right: 8px;">${text}</span>
+                    <span style="width: 100%; border-bottom: 1px dotted black; margin-bottom: 4px;"></span>
+                    <span style="white-space: nowrap; padding-left: 8px;">...</span>
+                </div>
+            `;
+        };
+
         data.body.forEach(section => {
-            summaryHtml += `<tr><td style="padding: 2px 0;"><strong>${section.numero} ${section.titulo}</strong></td><td style="text-align: right;">...</td></tr>`;
+            summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, false);
             section.subsections.forEach(subsection => {
-                 summaryHtml += `<tr><td style="padding: 2px 0 2px 20px;">${subsection.numero} ${subsection.titulo}</td><td style="text-align: right;">...</td></tr>`;
+                 summaryHtml += createSummaryRow(`${subsection.numero} ${subsection.titulo}`, true);
             });
         });
-        summaryHtml += `<tr><td style="padding: 2px 0;"><strong>REFERÊNCIAS</strong></td><td style="text-align: right;">...</td></tr>`;
-        summaryHtml += '</table>';
+        summaryHtml += createSummaryRow('REFERÊNCIAS', false);
+        summaryHtml += '</div>';
         return summaryHtml;
     };
 
@@ -77,10 +89,10 @@ function getDocumentHtml(data: NpaData): string {
             <div class="page" style="width: 21cm; min-height: 29.7cm; padding: 3cm 2cm 2cm 3cm; box-sizing: border-box; page-break-after: always; background-color: white;">
                  ${data.body.map(section => `
                     <div style="margin-bottom: 1.5em;">
-                        <p style="font-weight: bold; text-transform: uppercase;">${section.numero} ${section.titulo}</p>
+                        <p style="text-transform: uppercase;"><strong>${section.numero} ${section.titulo}</strong></p>
                         ${section.subsections.map(subsection => `
                             <div style="margin-top: 1em;">
-                                <p style="font-weight: bold; text-transform: uppercase; text-decoration: underline;">${subsection.numero} ${subsection.titulo}</p>
+                                <p style="text-transform: uppercase;"><strong><u>${subsection.numero} ${subsection.titulo}</u></strong></p>
                                 ${subsection.titulo.includes('PROPOSIÇÃO') ? 
                                     `<div style="margin-top: 3cm;">
                                         <table style="width: 100%; border-collapse: collapse;">
