@@ -18,11 +18,6 @@ function formatDate(dateString: string): string {
  * Gera o HTML central do documento.
  */
 function getDocumentHtml(data: NpaData): string {
-    const formatText = (text: string) => {
-        if (!text) return '';
-        return text.replace(/NRA/g, 'NPA').replace(/\n/g, '<br/>');
-    };
-
     const generateSummary = () => {
         let summaryHtml = '<div style="width: 100%; margin-top: 20px;">';
         let pageCounter = 2; 
@@ -123,58 +118,65 @@ function getDocumentHtml(data: NpaData): string {
                         <p style="text-transform: uppercase; margin: 0; font-weight: bold;">${section.numero} ${section.titulo}</p>
                         <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
                         
-                        ${section.subsections.map(subsection => `
-                            <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
-                                <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
-                                <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
-
-                                ${subsection.titulo.includes('PROPOSIÇÃO') ? 
-                                    `<div style="margin-top: 1cm; text-align: center;">
-                                        <div style="margin-bottom: 2cm; text-align: center;">
-                                            <p style="text-align: left; margin-bottom: 0.5cm;">Proposto por:</p>
-                                            <div style="display: inline-block; width: 100%; text-align: center;">
-                                                _____________________________________<br/>
-                                                ${data.assinaturas.propostoPor.nome.toUpperCase()}<br/>
-                                                ${data.assinaturas.propostoPor.cargo}
-                                            </div>
-                                        </div>
-                                         <div style="margin-bottom: 2cm; text-align: center;">
-                                            <p style="text-align: left; margin-bottom: 0.5cm;">Visto por:</p>
-                                            <div style="display: inline-block; width: 100%; text-align: center;">
-                                                _____________________________________<br/>
-                                                ${data.assinaturas.vistoPor.nome.toUpperCase()}<br/>
-                                                ${data.assinaturas.vistoPor.cargo}
-                                            </div>
-                                        </div>
-                                         <div style="margin-bottom: 2cm; text-align: center;">
-                                            <p style="text-align: left; margin-bottom: 0.5cm;">Aprovado por:</p>
-                                            <div style="display: inline-block; width: 100%; text-align: center;">
-                                                _____________________________________<br/>
-                                                ${data.assinaturas.aprovadoPor.nome.toUpperCase()}<br/>
-                                                ${data.assinaturas.aprovadoPor.cargo}
-                                            </div>
-                                        </div>
-                                    </div>` 
-                                : 
-                                    `<div>
-                                        ${subsection.conteudo ? `<p style="text-indent: 2.5cm; margin: 0; text-align: justify; line-height: 1.5;">${formatText(subsection.conteudo)}</p>` : ''}
-                                        
-                                        ${subsection.subSubsections && subsection.subSubsections.length > 0 ? 
-                                            `<div style="margin-top: 0.5cm;">
-                                                ${subsection.subSubsections.map(sss => `
-                                                    <div style="margin-bottom: 0.5cm;">
-                                                        <p style="margin: 0; font-weight: bold;">${sss.numero} ${sss.titulo}</p>
-                                                        <p style="text-indent: 2.5cm; margin: 0; text-align: justify; line-height: 1.5;">${formatText(sss.conteudo)}</p>
-                                                    </div>
-                                                `).join('')}
-                                            </div>` 
-                                        : ''}
-                                        
+                        ${section.subsections.map(subsection => {
+                            const hasTitle = subsection.titulo && subsection.titulo.trim() !== "";
+                            return `
+                                <div style="margin-bottom: 0.8cm; page-break-inside: avoid;">
+                                    ${hasTitle ? `
+                                        <p style="text-transform: uppercase; margin: 0;"><strong style="text-decoration: underline;">${subsection.numero} ${subsection.titulo}</strong></p>
                                         <p style="margin: 0; line-height: 1.2;">&nbsp;</p>
-                                    </div>`
-                                }
-                            </div>
-                        `).join('')}
+                                    ` : ''}
+
+                                    ${subsection.titulo.includes('PROPOSIÇÃO') ? 
+                                        `<div style="margin-top: 1cm; text-align: center;">
+                                            <div style="margin-bottom: 2cm; text-align: center;">
+                                                <p style="text-align: left; margin-bottom: 0.5cm;">Proposto por:</p>
+                                                <div style="display: inline-block; width: 100%; text-align: center;">
+                                                    _____________________________________<br/>
+                                                    ${data.assinaturas.propostoPor.nome.toUpperCase()}<br/>
+                                                    ${data.assinaturas.propostoPor.cargo}
+                                                </div>
+                                            </div>
+                                            <div style="margin-bottom: 2cm; text-align: center;">
+                                                <p style="text-align: left; margin-bottom: 0.5cm;">Visto por:</p>
+                                                <div style="display: inline-block; width: 100%; text-align: center;">
+                                                    _____________________________________<br/>
+                                                    ${data.assinaturas.vistoPor.nome.toUpperCase()}<br/>
+                                                    ${data.assinaturas.vistoPor.cargo}
+                                                </div>
+                                            </div>
+                                            <div style="margin-bottom: 2cm; text-align: center;">
+                                                <p style="text-align: left; margin-bottom: 0.5cm;">Aprovado por:</p>
+                                                <div style="display: inline-block; width: 100%; text-align: center;">
+                                                    _____________________________________<br/>
+                                                    ${data.assinaturas.aprovadoPor.nome.toUpperCase()}<br/>
+                                                    ${data.assinaturas.aprovadoPor.cargo}
+                                                </div>
+                                            </div>
+                                        </div>` 
+                                    : 
+                                        `<div>
+                                            ${subsection.conteudo ? `
+                                                <div style="text-align: justify; line-height: 1.5; font-family: 'Times New Roman', serif;">
+                                                    ${!hasTitle ? `<strong>${subsection.numero}</strong> ` : ''}
+                                                    ${subsection.conteudo}
+                                                </div>
+                                            ` : ''}
+                                            
+                                            ${subsection.subSubsections && subsection.subSubsections.length > 0 ? 
+                                                `<div style="margin-top: 0.5cm;">
+                                                    ${subsection.subSubsections.map(sss => `
+                                                        <div style="margin-bottom: 0.5cm;">
+                                                            ${sss.titulo ? `<p style="margin: 0; font-weight: bold;">${sss.numero} ${sss.titulo}</p>` : `<strong>${sss.numero}</strong> `}
+                                                            <div style="text-align: justify; line-height: 1.5;">${sss.conteudo}</div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>` 
+                                            : ''}
+                                        </div>`
+                                    }
+                                </div>
+                            `}).join('')}
                     </div>
                  `).join('')}
             </div>
@@ -186,7 +188,7 @@ function getDocumentHtml(data: NpaData): string {
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
                 <div style="text-align: justify; line-height: 1.4;">
                     <div style="text-indent: 0; padding: 0; margin: 0;">
-                        ${formatText(data.referencias)}
+                        ${data.referencias}
                     </div>
                 </div>
              </div>
@@ -367,6 +369,10 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 h2 { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 14pt; }
                 p { margin: 0; }
                 table { width: 100%; border-collapse: collapse; }
+                img { max-width: 100%; height: auto; display: block; }
+                
+                /* Garante que o conteúdo do Quill seja preservado na impressão */
+                .ql-editor { padding: 0; }
             </style>
         </head>
         <body>
@@ -404,7 +410,7 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
 
                     setTimeout(() => {
                         window.print();
-                    }, 800);
+                    }, 1000);
                 };
             </script>
         </body>
