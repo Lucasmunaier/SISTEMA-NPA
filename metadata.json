@@ -1,0 +1,5 @@
+{
+  "name": "Gerador de Documentos PAMA LS (NPA System)",
+  "description": "An intuitive web application for creating Norma Padrão de Ação (NPA) documents following the NPA 211-1C/DCIN/2024 standard. It features a tabbed interface for data entry and supports exporting to DOCX and PDF formats with precise military formatting.",
+  "requestFramePermissions": []
+}
