@@ -1,5 +1,5 @@
 import React, { useRef, useState, useMemo } from 'react';
-import ReactQuill from 'react-quill'; // O importmap redireciona para react-quill-new
+import ReactQuill from 'react-quill-new';
 
 interface MilitaryRichEditorProps {
     value: string;

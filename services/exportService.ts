@@ -29,7 +29,6 @@ function getDocumentHtml(data: NpaData): string {
 
         data.body.forEach(section => {
             summaryHtml += createSummaryRow(`${section.numero} ${section.titulo}`, `${pageCounter}`, 0);
-            section.subsections.forEach(() => { /* Logica de contagem simplificada */ });
             pageCounter++;
         });
         summaryHtml += createSummaryRow('REFERÊNCIAS', `${pageCounter}`, 0);
@@ -38,6 +37,7 @@ function getDocumentHtml(data: NpaData): string {
     };
 
     const grayBg = "background-color: #D9D9D9;";
+    const totalEfetivoA = data.anexoA.reduce((sum, row) => sum + (row.efetivoProposto || 0), 0);
 
     return `
         <!-- CAPA -->
@@ -72,6 +72,10 @@ function getDocumentHtml(data: NpaData): string {
                     <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">
                        ${data.anexos.map(a => `${a.letra} - ${a.titulo}`).join('<br/>')}
                     </td>
+                </tr>
+                <tr>
+                    <td style="${grayBg} padding: 8px; border-top: 1px solid black; text-align: center; font-size: 10pt;"><strong>DISTRIBUIÇÃO</strong></td>
+                    <td colspan="2" style="padding: 8px; border-top: 1px solid black; border-left: 2px solid black;">${data.distribuicao}</td>
                 </tr>
             </table>
             <div style="margin-top: 3cm;">
@@ -117,6 +121,87 @@ function getDocumentHtml(data: NpaData): string {
                 ${data.referencias}
             </div>
         </div>
+
+        <div class="page-break"></div>
+
+        <!-- ANEXO A -->
+        <div class="page-container">
+            <h2 style="text-align: center; font-size: 14pt; text-transform: uppercase; font-weight: bold; margin: 0;">ANEXO A - TABELA DE EFETIVO PROPOSTO</h2>
+            <p>&nbsp;</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1px solid black;">
+                <thead>
+                    <tr style="background-color: #f3f4f6;">
+                        <th style="border: 1px solid black; padding: 5px;" rowspan="2">Função</th>
+                        <th style="border: 1px solid black; padding: 5px;" colspan="3">Previsão Principal</th>
+                        <th style="border: 1px solid black; padding: 5px;" colspan="3">Previsão Alternativa</th>
+                        <th style="border: 1px solid black; padding: 5px;" rowspan="2">Efetivo Proposto</th>
+                    </tr>
+                    <tr style="background-color: #f9fafb;">
+                        <th style="border: 1px solid black; padding: 3px;">Posto/Grad</th>
+                        <th style="border: 1px solid black; padding: 3px;">Quadro</th>
+                        <th style="border: 1px solid black; padding: 3px;">Espec.</th>
+                        <th style="border: 1px solid black; padding: 3px;">Posto/Grad</th>
+                        <th style="border: 1px solid black; padding: 3px;">Quadro</th>
+                        <th style="border: 1px solid black; padding: 3px;">Espec.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.anexoA.map(row => `
+                        <tr>
+                            <td style="border: 1px solid black; padding: 4px;">${row.funcao}</td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.postoGrad}</td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.quadro}</td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoPrincipal.especialidade}</td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.postoGrad}</td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.quadro}</td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.previsaoAlternativa.especialidade}</td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: center;">${row.efetivoProposto}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight: bold; background-color: #f9fafb;">
+                        <td colspan="7" style="border: 1px solid black; padding: 5px; text-align: right;">TOTAL</td>
+                        <td style="border: 1px solid black; padding: 5px; text-align: center;">${totalEfetivoA}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- ANEXO B -->
+        <div class="page-container">
+            <h2 style="text-align: center; font-size: 14pt; text-transform: uppercase; font-weight: bold; margin: 0;">ANEXO B - MATRIZ DE QUALIFICAÇÃO</h2>
+            <p>&nbsp;</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid black;">
+                <thead>
+                    <tr style="background-color: #f3f4f6;">
+                        <th style="border: 1px solid black; padding: 6px;">Qualificação Desejável</th>
+                        <th style="border: 1px solid black; padding: 6px;">Sigla</th>
+                        <th style="border: 1px solid black; padding: 6px;">Legislação</th>
+                        <th style="border: 1px solid black; padding: 6px;">Prioridade</th>
+                        <th style="border: 1px solid black; padding: 6px;">CH</th>
+                        <th style="border: 1px solid black; padding: 6px;">ENC</th>
+                        <th style="border: 1px solid black; padding: 6px;">AUX</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.anexoB.map(row => `
+                        <tr>
+                            <td style="border: 1px solid black; padding: 5px;">${row.qualificacao}</td>
+                            <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.sigla}</td>
+                            <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.legislacao}</td>
+                            <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.prioridade}</td>
+                            <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorCh}</td>
+                            <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorEnc}</td>
+                            <td style="border: 1px solid black; padding: 5px; text-align: center;">${row.setorAux}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <p style="font-size: 8pt; margin-top: 10px;"><strong>LEGENDA:</strong> 1 = CURSO DESEJÁVEL, 0 = CURSO NÃO DESEJÁVEL</p>
+        </div>
     `;
 }
 
@@ -132,6 +217,7 @@ export const exportToDocx = async (data: NpaData): Promise<void> => {
     link.href = url;
     link.download = `NPA_${data.numero.replace(/[\/\s]/g, '_')}.docx`;
     link.click();
+    URL.revokeObjectURL(url);
 };
 
 export const exportToPdf = async (data: NpaData): Promise<void> => {
