@@ -15,7 +15,7 @@ function formatDate(dateString: string): string {
 }
 
 /**
- * Gera o HTML central do documento.
+ * Gera o HTML central do documento otimizado para impressão.
  */
 function getDocumentHtml(data: NpaData): string {
     const generateSummary = () => {
@@ -155,19 +155,15 @@ function getDocumentHtml(data: NpaData): string {
                                             </div>
                                         </div>` 
                                     : 
-                                        `<div>
-                                            ${subsection.conteudo ? `
-                                                <div style="text-align: justify; line-height: 1.5; font-family: 'Times New Roman', serif;">
-                                                    ${!hasTitle ? `<strong>${subsection.numero}</strong> ` : ''}
-                                                    ${subsection.conteudo}
-                                                </div>
-                                            ` : ''}
+                                        `<div class="rich-content">
+                                            ${!hasTitle ? `<strong>${subsection.numero}</strong>&nbsp;` : ''}
+                                            ${subsection.conteudo}
                                             
                                             ${subsection.subSubsections && subsection.subSubsections.length > 0 ? 
                                                 `<div style="margin-top: 0.5cm;">
                                                     ${subsection.subSubsections.map(sss => `
                                                         <div style="margin-bottom: 0.5cm;">
-                                                            ${sss.titulo ? `<p style="margin: 0; font-weight: bold;">${sss.numero} ${sss.titulo}</p>` : `<strong>${sss.numero}</strong> `}
+                                                            ${sss.titulo ? `<p style="margin: 0; font-weight: bold;">${sss.numero} ${sss.titulo}</p>` : `<strong>${sss.numero}</strong>&nbsp;`}
                                                             <div style="text-align: justify; line-height: 1.5;">${sss.conteudo}</div>
                                                         </div>
                                                     `).join('')}
@@ -186,10 +182,8 @@ function getDocumentHtml(data: NpaData): string {
             <!-- REFERÊNCIAS -->
              <div class="page-container" style="margin-top: 1cm;">
                 <p style="font-weight: bold; text-transform: uppercase; margin-bottom: 1.2cm; text-align: center;">REFERÊNCIAS</p>
-                <div style="text-align: justify; line-height: 1.4;">
-                    <div style="text-indent: 0; padding: 0; margin: 0;">
-                        ${data.referencias}
-                    </div>
+                <div class="rich-content" style="text-align: justify; line-height: 1.4;">
+                    ${data.referencias}
                 </div>
              </div>
 
@@ -316,7 +310,8 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>NPA ${data.numero}</title>
+            <meta charset="UTF-8">
+            <title>Impressão NPA ${data.numero}</title>
             <style>
                 @page { 
                     size: A4; 
@@ -353,6 +348,7 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                     justify-content: space-between;
                     font-size: 11pt;
                     font-weight: bold;
+                    pointer-events: none;
                 }
 
                 @media print {
@@ -362,7 +358,7 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                         box-shadow: none; 
                         width: 100%; 
                         padding: 30mm 20mm 20mm 30mm;
-                        overflow: hidden;
+                        overflow: visible;
                     }
                 }
                 
@@ -371,8 +367,8 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                 table { width: 100%; border-collapse: collapse; }
                 img { max-width: 100%; height: auto; display: block; }
                 
-                /* Garante que o conteúdo do Quill seja preservado na impressão */
-                .ql-editor { padding: 0; }
+                .rich-content p { margin-bottom: 0.5cm; }
+                .rich-content img { margin: 10px 0; }
             </style>
         </head>
         <body>
@@ -395,9 +391,11 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                             const rightSpan = document.createElement('span');
                             
                             if (pageNum % 2 === 0) {
+                                // Páginas Pares: Número do Doc à esquerda, Paginação à direita
                                 leftSpan.innerText = docNum;
                                 rightSpan.innerText = pageNum + " / " + totalPages;
                             } else {
+                                // Páginas Ímpares: Paginação à esquerda, Número do Doc à direita
                                 leftSpan.innerText = pageNum + " / " + totalPages;
                                 rightSpan.innerText = docNum;
                             }
@@ -408,9 +406,10 @@ export const exportToPdf = async (data: NpaData): Promise<void> => {
                         }
                     });
 
+                    // Pequeno atraso para garantir renderização de imagens complexas
                     setTimeout(() => {
                         window.print();
-                    }, 1000);
+                    }, 500);
                 };
             </script>
         </body>
